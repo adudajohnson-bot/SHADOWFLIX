@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101014">
+<title>ShadowFlix — Movie Discovery</title>
+<style>
+:root{--bg:#101014;--panel:#1b1b22;--muted:#a6a6b1;--red:#e50914;--gold:#f2c14e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#fff;font-family:Arial,Helvetica,sans-serif}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px clamp(14px,4vw,42px);background:#101014ed;border-bottom:1px solid #ffffff12;backdrop-filter:blur(12px)}
+.logo{font-weight:1000;font-size:25px;letter-spacing:-1px;color:var(--red)}.logo span{color:white}
+nav{display:flex;gap:16px;font-size:13px;color:#ddd}nav a{color:inherit;text-decoration:none}
+.search{width:min(34vw,280px);min-width:130px;background:#202027;border:1px solid #393943;color:white;border-radius:9px;padding:10px 12px;outline:none}
+main{max-width:1250px;margin:auto;padding:0 20px 48px}
+.hero{min-height:350px;margin:20px 0 28px;border-radius:18px;overflow:hidden;position:relative;background:linear-gradient(90deg,#090a0f 0%,#090a0fcc 45%,#090a0a22 100%),radial-gradient(ellipse at 75% 25%,#7c1829 0%,#352033 35%,#141820 72%);display:flex;align-items:end}
+.hero:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#090a0f 0%,transparent 60%);pointer-events:none}
+.hero-content{position:relative;z-index:1;padding:clamp(22px,5vw,48px);max-width:650px}
+.kicker{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:.22em;text-transform:uppercase}
+h1{font-size:clamp(34px,6vw,64px);line-height:.95;margin:12px 0}
+.hero p{color:#d0d0d5;line-height:1.6;max-width:520px}
+.button{display:inline-block;background:var(--red);color:white;border:0;padding:12px 17px;border-radius:8px;font-weight:800;text-decoration:none;cursor:pointer}
+.secondary{background:#ffffff18;border:1px solid #ffffff2c;margin-left:8px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:24px 0 16px}
+.filters{display:flex;gap:8px;flex-wrap:wrap}.filter{background:#24242d;color:#ddd;border:1px solid #ffffff12;border-radius:999px;padding:8px 13px;cursor:pointer}.filter.active{background:white;color:#111}
+h2{font-size:22px;margin:0}.section-note{color:var(--muted);font-size:12px;margin-top:5px}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}
+.movie{background:var(--panel);border-radius:12px;overflow:hidden;border:1px solid #ffffff0d;transition:transform .18s,border-color .18s;cursor:pointer}.movie:hover{transform:translateY(-4px);border-color:#ffffff44}
+.poster{height:190px;position:relative;display:flex;align-items:end;padding:13px;background:linear-gradient(145deg,var(--c1),var(--c2));isolation:isolate;overflow:hidden}
+.poster:before{content:"";position:absolute;width:170px;height:170px;border:1px solid #ffffff40;border-radius:50%;right:-35px;top:-30px;box-shadow:0 0 0 16px #ffffff08,0 0 0 36px #ffffff07;z-index:-1}
+.poster:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#000b,transparent 80%);z-index:-1}
+.poster b{font-size:20px;line-height:1.0;text-shadow:0 2px 8px #0008;text-transform:uppercase;letter-spacing:-.5px}
+.badge{position:absolute;top:10px;left:10px;background:#0b0b0dcc;border-radius:5px;padding:5px 7px;font-size:9px;letter-spacing:.1em}
+.movie-info{padding:11px}.movie-title{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta{font-size:11px;color:var(--muted);margin-top:5px}.movie-info button{margin-top:10px;width:100%;font-size:12px;padding:9px}
+.empty{display:none;text-align:center;color:var(--muted);padding:45px 0}
+footer{border-top:1px solid #ffffff18;padding:24px 20px;text-align:center;color:#92929d;font-size:12px;line-height:1.7}
+dialog{border:1px solid #ffffff2b;border-radius:16px;background:#1a1a22;color:white;width:min(92vw,540px);padding:0;box-shadow:0 25px 80px #000b}dialog::backdrop{background:#000b}
+.modal-head{padding:25px;background:linear-gradient(130deg,#3c1324,#191921)}.modal-body{padding:22px}.modal-body p{color:#c4c4ce;line-height:1.6;font-size:14px}.close{float:right;background:#ffffff1b;border:0;color:white;border-radius:8px;padding:7px 10px;cursor:pointer}
+@media(max-width:900px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.poster{height:175px}nav{display:none}}
+@media(max-width:560px){header{padding:12px}.logo{font-size:22px}.search{width:42vw;min-width:100px;padding:9px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}main{padding:0 12px 35px}.hero{min-height:330px}.poster{height:170px}.movie-info{padding:9px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="logo">SHADOW<span>FLIX</span></div>
+ <nav><a href="#home">Home</a><a href="#browse">Browse</a><a href="#about">About</a></nav>
+ <input id="search" class="search" placeholder="Search films..." aria-label="Search films">
+</header>
+<main id="home">
+ <section class="hero">
+  <div class="hero-content">
+   <div class="kicker">Your next movie night starts here</div>
+   <h1>FIND YOUR<br>NEW FAVOURITE.</h1>
+   <p>Explore a growing collection of movie picks, discover classics, and find legal places to watch. Your movie world, all in one place.</p>
+   <a href="#browse" class="button">EXPLORE MOVIES</a><button class="button secondary" id="aboutBtn">HOW IT WORKS</button>
+  </div>
+ </section>
+ <section id="browse">
+  <div class="toolbar"><div><h2>Discover movies</h2><div class="section-note">Demo catalogue · sample titles and placeholders</div></div><div class="filters" id="filters"><button class="filter active">All</button><button class="filter">Action</button><button class="filter">Adventure</button><button class="filter">Animation</button><button class="filter">Comedy</button><button class="filter">Documentary</button><button class="filter">Drama</button><button class="filter">Mystery</button><button class="filter">Romance</button><button class="filter">Thriller</button></div></div>
+  <div class="grid" id="grid"><article class="movie"><div class="poster" style="--c1:#a23d25;--c2:#1b1b35"><span class="badge">SHADOW PICK</span><b>The Last Frontier</b></div><div class="movie-info"><div class="movie-title">The Last Frontier</div><div class="meta">2024 · Action · PG-13</div><button class="button details">VIEW DETAILS</button></div></article><article class="movie"><div class="poster" style="--c1:#163e6a;--c2:#111323"><span class="badge">SHADOW PICK</span><b>Midnight Signal</b></div><div class="movie-info"><div class="movie-title">Midnight Signal</div><div class="meta">2023 · Thriller · PG-13</div><button class="button details">VIEW DETAILS</button></div></article><article class="movie"><div class="poster" style="--c1:#e68b35;--c2:#7a2649"><span class="badge">SHADOW PICK</span><b>Laughing Matters</b></div><div class="movie-info"><div class="movie-title">Laughing Matters</div><div class="meta">2022 · Comedy · PG</div><button class="button details">VIEW DETAILS</button></div></article><article class="movie"><div class="poster" style="--c1:#117c91;--c2:#14204c"><span class="badge">SHADOW PICK</span><b>Ocean of Stars</b></div><div class="movie-info"><div class="movie-title">Ocean of Stars</div><div class="meta">2021 · Adventure · PG</div><button class="button details">VIEW DETAILS</button></div></article><article class="movie"><div class="poster" style="--c1:#82603c;--c2:#272037"><span class="badge">SHADOW PICK</span><b>The Clockmaker</b></div><div class="movie-info"><div class="movie-title">The Clockmaker</div><div class="meta">2020 · Mystery · PG</div><button class="button details">VIEW DETAILS</button></div></article><article class="movie"><div class="poster" style="--c1:#3b9b7c;--c2:#2251a0"><span class="badge">SHADOW PICK</span><b>Tiny Heroes</b></div><div class="movie-info"><div class="movie-title">Tiny Heroes</div><div class="meta">2023 · Animation · G</div><button class="button details">VIEW DETAILS</button></div></article><article class="movie"><div class="poster" style="--c1:#d17b39;--c2:#4c2d36"><span class="badge">SHADOW PICK</span><b>Desert Run</b></div><div class="movie-info"><div class="movie-title">Desert Run</div><div class="meta">2019 · Action · PG-13</div><button class="button details">VIEW DETAILS</button></div></article><article class="movie"><div class="poster" style="--c1:#6c8c88;--c2:#28364e"><span class="badge">SHADOW PICK</span><b>Home Again</b></div><div class="movie-info"><div class="movie-title">Home Again</div><div class="meta">2018 · Drama · PG</div><button class="button details">VIEW DETAILS</button></div></article><article class="movie"><div class="poster" style="--c1:#4e9a51;--c2:#163b43"><span class="badge">SHADOW PICK</span><b>The Green Planet</b></div><div class="movie-info"><div class="movie-title">The Green Planet</div><div class="meta">2022 · Documentary · G</div><button class="button details">VIEW DETAILS</button></div></article><article class="movie"><div class="poster" style="--c1:#667fa8;--c2:#352447"><span class="badge">SHADOW PICK</span><b>Winter Lights</b></div><div class="movie-info"><div class="movie-title">Winter Lights</div><div class="meta">2017 · Romance · PG-13</div><button class="button details">VIEW DETAILS</button></div></article></div><div class="empty" id="empty" style="display: none;">No films found. Try another title or category.</div>
+ </section>
+</main>
+<footer id="about">SHADOWFLIX · A movie-discovery app prototype.<br>Sample catalogue only. Watch links will be added for films that are legally available to stream.</footer>
+<dialog id="dialog"><div class="modal-head"><button class="close" id="close">✕</button><div class="kicker" id="modalGenre">MOVIE DETAILS</div><h2 id="modalTitle" style="margin-top:9px">Film title</h2></div><div class="modal-body"><p id="modalDesc"></p><p id="modalMeta" class="meta"></p><div id="watchArea"></div></div></dialog>
+<script>
+const films=[
+ {title:"The Last Frontier",year:"2024",genre:"Action",rating:"PG-13",colors:["#a23d25","#1b1b35"],desc:"A team of explorers races against time across a remote landscape. This is a fictional sample title for the ShadowFlix demo."},
+ {title:"Midnight Signal",year:"2023",genre:"Thriller",rating:"PG-13",colors:["#163e6a","#111323"],desc:"A mysterious late-night broadcast brings a small town together to solve a puzzle. This is a fictional sample title for the ShadowFlix demo."},
+ {title:"Laughing Matters",year:"2022",genre:"Comedy",rating:"PG",colors:["#e68b35","#7a2649"],desc:"Friends turn an ordinary weekend into an unforgettable comedy of errors. This is a fictional sample title for the ShadowFlix demo."},
+ {title:"Ocean of Stars",year:"2021",genre:"Adventure",rating:"PG",colors:["#117c91","#14204c"],desc:"A young crew sets out to map an uncharted stretch of ocean. This is a fictional sample title for the ShadowFlix demo."},
+ {title:"The Clockmaker",year:"2020",genre:"Mystery",rating:"PG",colors:["#82603c","#272037"],desc:"An old workshop holds clues to a decades-old mystery. This is a fictional sample title for the ShadowFlix demo."},
+ {title:"Tiny Heroes",year:"2023",genre:"Animation",rating:"G",colors:["#3b9b7c","#2251a0"],desc:"A group of tiny inventors build a machine to help their neighbourhood. This is a fictional sample title for the ShadowFlix demo."},
+ {title:"Desert Run",year:"2019",genre:"Action",rating:"PG-13",colors:["#d17b39","#4c2d36"],desc:"Two rivals enter a cross-country challenge where every decision matters. This is a fictional sample title for the ShadowFlix demo."},
+ {title:"Home Again",year:"2018",genre:"Drama",rating:"PG",colors:["#6c8c88","#28364e"],desc:"A family reconnects while restoring a long-forgotten community hall. This is a fictional sample title for the ShadowFlix demo."},
+ {title:"The Green Planet",year:"2022",genre:"Documentary",rating:"G",colors:["#4e9a51","#163b43"],desc:"A sample documentary card about the wonders of nature. Replace this with a verified, legally available film before public launch."},
+ {title:"Winter Lights",year:"2017",genre:"Romance",rating:"PG-13",colors:["#667fa8","#352447"],desc:"Two strangers help organise a winter festival and discover a shared passion. This is a fictional sample title for the ShadowFlix demo."}
+];
+const genres=["All","Action","Adventure","Animation","Comedy","Documentary","Drama","Mystery","Romance","Thriller"];
+let active="All";
+const grid=document.getElementById("grid"), filters=document.getElementById("filters"), search=document.getElementById("search");
+genres.forEach(g=>{const b=document.createElement("button");b.className="filter"+(g==="All"?" active":"");b.textContent=g;b.onclick=()=>{active=g;document.querySelectorAll(".filter").forEach(x=>x.classList.toggle("active",x===b));render();};filters.appendChild(b);});
+function render(){const q=search.value.toLowerCase().trim();const found=films.filter(f=>(active==="All"||f.genre===active)&&(f.title.toLowerCase().includes(q)||f.genre.toLowerCase().includes(q)));grid.innerHTML="";found.forEach((f,i)=>{const card=document.createElement("article");card.className="movie";card.innerHTML=`<div class="poster" style="--c1:${f.colors[0]};--c2:${f.colors[1]}"><span class="badge">SHADOW PICK</span><b>${f.title}</b></div><div class="movie-info"><div class="movie-title">${f.title}</div><div class="meta">${f.year} · ${f.genre} · ${f.rating}</div><button class="button details">VIEW DETAILS</button></div>`;card.querySelector("button").onclick=()=>showFilm(f);card.onclick=e=>{if(!e.target.closest("button"))showFilm(f)};grid.appendChild(card);});document.getElementById("empty").style.display=found.length?"none":"block";}
+const dlg=document.getElementById("dialog");
+function showFilm(f){document.getElementById("modalGenre").textContent=f.genre+" · "+f.year;document.getElementById("modalTitle").textContent=f.title;document.getElementById("modalDesc").textContent=f.desc;document.getElementById("modalMeta").textContent="Content rating: "+f.rating;document.getElementById("watchArea").innerHTML='<p style="color:#f2c14e">This is a catalogue demo. No movie video is hosted here yet. We will add a watch button only when we have a legal streaming source or permission.</p>';dlg.showModal();}
+document.getElementById("close").onclick=()=>dlg.close();document.getElementById("aboutBtn").onclick=()=>{document.getElementById("modalGenre").textContent="ABOUT SHADOWFLIX";document.getElementById("modalTitle").textContent="Discover. Choose. Watch legally.";document.getElementById("modalDesc").textContent="ShadowFlix helps you browse movie picks and find authorised places to watch. This first prototype has search, categories and details. The next step is connecting real public-domain films or licensed streaming sources.";document.getElementById("modalMeta").textContent="Prototype version 0.1";document.getElementById("watchArea").innerHTML="";dlg.showModal();};
+search.addEventListener("input",render);render();
+</script>
+</body></html>
