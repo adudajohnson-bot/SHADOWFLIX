@@ -1,146 +1,361 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ShadowFlix | Discover Movies</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#090b12;color:#fff;font-family:Arial,sans-serif}
-header{height:75px;padding:0 7%;display:flex;align-items:center;justify-content:space-between;background:#10131d;border-bottom:1px solid #242838;position:sticky;top:0;z-index:5}
-.logo{font-size:25px;font-weight:900;color:#ff3155;letter-spacing:1px}
-.logo span{color:white}
-nav a{color:#ddd;text-decoration:none;margin-left:22px;font-size:14px}
-nav a:hover{color:#ff3155}
-.hero{min-height:390px;padding:85px 8%;display:flex;align-items:center;background:linear-gradient(90deg,#10131d 15%,rgba(16,19,29,.88),rgba(16,19,29,.2)),linear-gradient(135deg,#35152e,#151c38,#090b12)}
-.hero-content{max-width:580px}
-.tag{color:#ff5470;font-size:12px;font-weight:bold;letter-spacing:3px}
-h1{font-size:clamp(38px,6vw,65px);margin:17px 0}
-.hero p{color:#c5c8d2;line-height:1.7;margin-bottom:25px}
-.primary{background:#ff3155;color:white;border:0;padding:14px 24px;border-radius:6px;font-weight:bold;cursor:pointer}
-.primary:hover{background:#d91e43}
-main{padding:35px 7%}
-.section-title{font-size:23px;margin-bottom:18px}
-.tools{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px}
-input,select{background:#151a27;border:1px solid #303649;color:white;padding:13px;border-radius:6px}
-input{flex:1;min-width:190px}
-select{min-width:140px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:20px}
-.movie{background:#131724;border-radius:9px;overflow:hidden;cursor:pointer;transition:.2s}
-.movie:hover{transform:translateY(-5px);box-shadow:0 8px 25px #0008}
-.poster{height:220px;display:flex;align-items:center;justify-content:center;text-align:center;padding:15px;font-size:25px;font-weight:900;background:linear-gradient(145deg,#51213f,#172c50)}
-.poster.two{background:linear-gradient(145deg,#174a50,#171b35)}
-.poster.three{background:linear-gradient(145deg,#653b20,#20172e)}
-.poster.four{background:linear-gradient(145deg,#34366e,#101522)}
-.poster.five{background:linear-gradient(145deg,#56302c,#151b37)}
-.poster.six{background:linear-gradient(145deg,#285039,#151b29)}
-.movie-info{padding:13px}
-.movie-info h3{font-size:15px;margin-bottom:7px}
-.movie-info p{font-size:12px;color:#a9afbd}
-.empty{color:#a9afbd;padding:30px 0}
-footer{text-align:center;padding:30px;color:#8f96a7;border-top:1px solid #242838;font-size:13px;line-height:1.8}
-#details{display:none;position:fixed;inset:0;background:#000c;z-index:10;align-items:center;justify-content:center;padding:20px}
-.dialog{background:#171c2a;padding:28px;border-radius:12px;max-width:450px;width:100%}
-.dialog h2{margin:15px 0}
-.dialog p{color:#c0c5d1;line-height:1.6;margin-bottom:20px}
-.close{float:right;background:none;color:white;border:0;font-size:25px;cursor:pointer}
-@media(max-width:600px){header{padding:0 5%;height:65px}nav a{margin-left:10px;font-size:12px}.hero{padding:65px 6%;min-height:340px}main{padding:28px 5%}.poster{height:190px}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090b12">
+  <title>ShadowFlix — Discover Your Next Movie</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --background: #090b12;
+      --surface: #141824;
+      --text: #f5f6fa;
+      --muted: #a3a9b8;
+      --accent: #e5094f;
+    }
+
+    body {
+      background: var(--background);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 20px 7%;
+      background: #10131d;
+      border-bottom: 1px solid #252a38;
+    }
+
+    .logo {
+      color: var(--accent);
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    nav a {
+      color: var(--text);
+      text-decoration: none;
+      margin-left: 20px;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      color: var(--accent);
+    }
+
+    .hero {
+      padding: 75px 7%;
+      background:
+        linear-gradient(90deg, #090b12 15%, rgba(9,11,18,.75)),
+        radial-gradient(circle at 80% 30%, #57203e, #17182c 55%, #090b12);
+      min-height: 340px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .hero small {
+      color: #ff668f;
+      font-weight: bold;
+      letter-spacing: 3px;
+    }
+
+    .hero h1 {
+      font-size: clamp(38px, 6vw, 65px);
+      margin: 12px 0;
+      max-width: 650px;
+      line-height: 1.1;
+    }
+
+    .hero p {
+      color: #c4c8d2;
+      max-width: 520px;
+      margin-bottom: 24px;
+    }
+
+    .hero button, .movie button {
+      border: 0;
+      border-radius: 6px;
+      background: var(--accent);
+      color: white;
+      padding: 11px 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    main {
+      padding: 35px 7%;
+    }
+
+    .section-heading {
+      font-size: 25px;
+      margin-bottom: 18px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    input, select {
+      background: var(--surface);
+      color: white;
+      border: 1px solid #303748;
+      border-radius: 7px;
+      padding: 13px;
+      font-size: 15px;
+    }
+
+    input {
+      flex: 1;
+      min-width: 190px;
+    }
+
+    select {
+      min-width: 145px;
+    }
+
+    .movie-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+    }
+
+    .movie {
+      background: var(--surface);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #242a39;
+      transition: transform .2s;
+    }
+
+    .movie:hover {
+      transform: translateY(-5px);
+    }
+
+    .poster {
+      min-height: 235px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 15px;
+      font-size: 25px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      background: linear-gradient(145deg, #52213f, #17243d);
+    }
+
+    .poster.p2 { background: linear-gradient(145deg, #123b50, #15152c); }
+    .poster.p3 { background: linear-gradient(145deg, #593b18, #24172f); }
+    .poster.p4 { background: linear-gradient(145deg, #253c28, #111c2b); }
+    .poster.p5 { background: linear-gradient(145deg, #572020, #17172c); }
+    .poster.p6 { background: linear-gradient(145deg, #29275b, #11131d); }
+    .poster.p7 { background: linear-gradient(145deg, #14534b, #172238); }
+    .poster.p8 { background: linear-gradient(145deg, #5b3d12, #29172c); }
+
+    .movie-info {
+      padding: 15px;
+    }
+
+    .movie-info h3 {
+      font-size: 17px;
+      margin-bottom: 5px;
+    }
+
+    .movie-info p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 13px;
+    }
+
+    .movie button {
+      width: 100%;
+      padding: 9px;
+    }
+
+    #empty {
+      color: var(--muted);
+      padding: 25px 0;
+      display: none;
+    }
+
+    footer {
+      text-align: center;
+      padding: 28px 15px;
+      color: var(--muted);
+      border-top: 1px solid #252a38;
+      margin-top: 45px;
+      font-size: 13px;
+    }
+
+    footer strong {
+      color: var(--accent);
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+      }
+
+      nav a {
+        margin: 0 8px;
+      }
+
+      .hero {
+        padding: 55px 7%;
+      }
+
+      main {
+        padding: 28px 5%;
+      }
+
+      .movie-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .poster {
+        min-height: 175px;
+        font-size: 19px;
+      }
+
+      .movie-info {
+        padding: 10px;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<header>
-<div class="logo">SHADOW<span>FLIX</span></div>
-<nav>
-<a href="#home">Home</a>
-<a href="#movies">Movies</a>
-</nav>
-</header>
+  <header>
+    <div class="logo">SHADOWFLIX</div>
+    <nav>
+      <a href="#home">Home</a>
+      <a href="#movies">Movies</a>
+      <a href="#about">About</a>
+    </nav>
+  </header>
 
-<section class="hero" id="home">
-<div class="hero-content">
-<div class="tag">YOUR MOVIE DISCOVERY DESTINATION</div>
-<h1>Find Your Next Favourite.</h1>
-<p>Explore movies, discover new stories and find something worth watching. Your next movie night starts here.</p>
-<button class="primary" onclick="document.getElementById('movies').scrollIntoView({behavior:'smooth'})">Explore Movies →</button>
-</div>
-</section>
+  <section class="hero" id="home">
+    <small>WELCOME TO SHADOWFLIX</small>
+    <h1>Discover Your Next Favourite Movie.</h1>
+    <p>Explore movies, discover new stories and find something worth watching.</p>
+    <button onclick="document.getElementById('movies').scrollIntoView({behavior:'smooth'})">
+      Explore Movies
+    </button>
+  </section>
 
-<main id="movies">
-<h2 class="section-title">Explore Movies 🍿</h2>
+  <main id="movies">
+    <h2 class="section-heading">Explore Movies</h2>
 
-<div class="tools">
-<input id="search" type="search" placeholder="Search for a movie..." oninput="renderMovies()">
-<select id="genre" onchange="renderMovies()">
-<option value="All">All genres</option>
-<option>Action</option>
-<option>Adventure</option>
-<option>Drama</option>
-<option>Comedy</option>
-<option>Sci-Fi</option>
-<option>Animation</option>
-</select>
-</div>
+    <div class="controls">
+      <input
+        type="search"
+        id="search"
+        placeholder="Search for a movie..."
+        aria-label="Search movies"
+      >
 
-<div class="grid" id="movieGrid"></div>
-<p class="empty" id="empty" style="display:none">No movies found. Try another search.</p>
-</main>
+      <select id="genre" aria-label="Filter by genre">
+        <option value="all">All genres</option>
+        <option value="Action">Action</option>
+        <option value="Adventure">Adventure</option>
+        <option value="Comedy">Comedy</option>
+        <option value="Drama">Drama</option>
+        <option value="Sci-Fi">Sci-Fi</option>
+        <option value="Fantasy">Fantasy</option>
+      </select>
+    </div>
 
-<div id="details" onclick="if(event.target===this)closeDetails()">
-<div class="dialog">
-<button class="close" onclick="closeDetails()">×</button>
-<div class="tag">SHADOWFLIX MOVIE DETAILS</div>
-<h2 id="detailTitle"></h2>
-<p id="detailInfo"></p>
-<p>Movie information and discovery only. Playback will be added using authorised movie sources.</p>
-<button class="primary" onclick="closeDetails()">Back to movies</button>
-</div>
-</div>
+    <div class="movie-grid" id="movieGrid"></div>
+    <p id="empty">No movies found. Try another search.</p>
+  </main>
 
-<footer>
-<div class="logo">SHADOW<span>FLIX</span></div>
-<p>Discover stories. Explore movies.</p>
-<p>© 2026 ShadowFlix. All rights reserved.</p>
-</footer>
+  <footer id="about">
+    <p><strong>SHADOWFLIX</strong> — Discover stories. Explore cinema.</p>
+    <p>Movie discovery demo. Movie titles and artwork are illustrative placeholders.</p>
+  </footer>
 
-<script>
-const movies=[
-{title:"The Last Horizon",genre:"Adventure",year:2025,description:"An adventurous journey into an unknown world.",style:""},
-{title:"Midnight Chase",genre:"Action",year:2024,description:"A thrilling fictional action story.",style:"two"},
-{title:"Beyond Tomorrow",genre:"Sci-Fi",year:2025,description:"A fictional journey into the future.",style:"three"},
-{title:"Silent Dreams",genre:"Drama",year:2023,description:"A story about hope and new beginnings.",style:"four"},
-{title:"Laugh Out Loud",genre:"Comedy",year:2024,description:"A light-hearted fictional comedy.",style:"five"},
-{title:"The Green Kingdom",genre:"Animation",year:2025,description:"An animated adventure in a magical world.",style:"six"}
-];
+  <script>
+    const movies = [
+      { title: "Shadow Hunter", genre: "Action", year: 2025, color: "p1", description: "An original fictional action adventure." },
+      { title: "Beyond Earth", genre: "Sci-Fi", year: 2024, color: "p2", description: "An original fictional journey beyond our planet." },
+      { title: "Golden Quest", genre: "Adventure", year: 2025, color: "p3", description: "An original fictional adventure full of mystery." },
+      { title: "Wild Kingdom", genre: "Drama", year: 2023, color: "p4", description: "An original fictional story about life and nature." },
+      { title: "Last Mission", genre: "Action", year: 2024, color: "p5", description: "An original fictional mission against the odds." },
+      { title: "Dream World", genre: "Fantasy", year: 2025, color: "p6", description: "An original fictional fantasy adventure." },
+      { title: "Ocean Mystery", genre: "Adventure", year: 2023, color: "p7", description: "An original fictional mystery beneath the sea." },
+      { title: "Funny Business", genre: "Comedy", year: 2024, color: "p8", description: "An original fictional comedy." }
+    ];
 
-function renderMovies(){
-const query=document.getElementById("search").value.toLowerCase();
-const genre=document.getElementById("genre").value;
-const filtered=movies.filter(m=>
-m.title.toLowerCase().includes(query)&&
-(genre==="All"||m.genre===genre)
-);
-const grid=document.getElementById("movieGrid");
-grid.innerHTML="";
-filtered.forEach(m=>{
-const card=document.createElement("article");
-card.className="movie";
-card.innerHTML=`<div class="poster ${m.style}">${m.title}</div><div class="movie-info"><h3>${m.title}</h3><p>${m.genre} • ${m.year}</p></div>`;
-card.onclick=()=>showDetails(m);
-grid.appendChild(card);
-});
-document.getElementById("empty").style.display=filtered.length?"none":"block";
-}
+    const grid = document.getElementById("movieGrid");
+    const search = document.getElementById("search");
+    const genre = document.getElementById("genre");
+    const empty = document.getElementById("empty");
 
-function showDetails(movie){
-document.getElementById("detailTitle").textContent=movie.title;
-document.getElementById("detailInfo").textContent=movie.genre+" • "+movie.year+" — "+movie.description;
-document.getElementById("details").style.display="flex";
-}
-function closeDetails(){
-document.getElementById("details").style.display="none";
-}
-renderMovies();
-</script>
+    function displayMovies() {
+      const term = search.value.toLowerCase().trim();
+      const selectedGenre = genre.value;
+
+      const filtered = movies.filter(movie =>
+        movie.title.toLowerCase().includes(term) &&
+        (selectedGenre === "all" || movie.genre === selectedGenre)
+      );
+
+      grid.innerHTML = "";
+
+      filtered.forEach(movie => {
+        const card = document.createElement("article");
+        card.className = "movie";
+
+        const poster = document.createElement("div");
+        poster.className = "poster " + movie.color;
+        poster.textContent = movie.title;
+
+        const info = document.createElement("div");
+        info.className = "movie-info";
+
+        const heading = document.createElement("h3");
+        heading.textContent = movie.title;
+
+        const details = document.createElement("p");
+        details.textContent = movie.genre + " • " + movie.year;
+
+        const button = document.createElement("button");
+        button.textContent = "View Details";
+        button.addEventListener("click", () => {
+          alert(movie.title + "\n\n" + movie.description +
+            "\n\nThis is a demo listing. No movie is hosted here.");
+        });
+
+        info.append(heading, details, button);
+        card.append(poster, info);
+        grid.appendChild(card);
+      });
+
+      empty.style.display = filtered.length ? "none" : "block";
+    }
+
+    search.addEventListener("input", displayMovies);
+    genre.addEventListener("change", displayMovies);
+
+    displayMovies();
+  </script>
+
 </body>
 </html>
