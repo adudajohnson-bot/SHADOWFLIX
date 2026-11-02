@@ -1,407 +1,640 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#090b12">
-  <title>ShadowFlix — Discover Your Next Movie</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#08090d">
+<meta name="description" content="ShadowFlix — Discover movies, explore genres, and find films available to watch legally.">
+<title>ShadowFlix | Discover Your Next Movie</title>
 
-    :root {
-      --background: #090b12;
-      --surface: #141824;
-      --text: #f5f6fa;
-      --muted: #a3a9b8;
-      --accent: #e5094f;
-    }
+<style>
+:root {
+  --bg: #08090d;
+  --panel: #13151d;
+  --text: #f5f5f7;
+  --muted: #a7a9b5;
+  --accent: #e50938;
+  --line: #272a35;
+}
 
-    body {
-      background: var(--background);
-      color: var(--text);
-      font-family: Arial, sans-serif;
-      line-height: 1.5;
-    }
+* {
+  box-sizing: border-box;
+}
 
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      padding: 20px 7%;
-      background: #10131d;
-      border-bottom: 1px solid #252a38;
-    }
+html {
+  scroll-behavior: smooth;
+}
 
-    .logo {
-      color: var(--accent);
-      font-size: 26px;
-      font-weight: 900;
-      letter-spacing: 1px;
-    }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
 
-    nav a {
-      color: var(--text);
-      text-decoration: none;
-      margin-left: 20px;
-      font-size: 14px;
-    }
+button, input, select {
+  font: inherit;
+}
 
-    nav a:hover {
-      color: var(--accent);
-    }
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}
 
-    .hero {
-      padding: 75px 7%;
-      background:
-        linear-gradient(90deg, #090b12 15%, rgba(9,11,18,.75)),
-        radial-gradient(circle at 80% 30%, #57203e, #17182c 55%, #090b12);
-      min-height: 340px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
+header {
+  min-height: 74px;
+  padding: 16px 6%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(8, 9, 13, .96);
+}
 
-    .hero small {
-      color: #ff668f;
-      font-weight: bold;
-      letter-spacing: 3px;
-    }
+.logo {
+  color: var(--accent);
+  font-size: 27px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-decoration: none;
+}
 
-    .hero h1 {
-      font-size: clamp(38px, 6vw, 65px);
-      margin: 12px 0;
-      max-width: 650px;
-      line-height: 1.1;
-    }
+nav {
+  display: flex;
+  gap: 22px;
+}
 
-    .hero p {
-      color: #c4c8d2;
-      max-width: 520px;
-      margin-bottom: 24px;
-    }
+nav a {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 14px;
+}
 
-    .hero button, .movie button {
-      border: 0;
-      border-radius: 6px;
-      background: var(--accent);
-      color: white;
-      padding: 11px 18px;
-      font-weight: bold;
-      cursor: pointer;
-    }
+nav a:hover {
+  color: var(--accent);
+}
 
-    main {
-      padding: 35px 7%;
-    }
+.hero {
+  min-height: 410px;
+  padding: 75px 7%;
+  display: flex;
+  align-items: center;
+  background:
+    radial-gradient(ellipse at 80% 30%, rgba(229,9,56,.25), transparent 45%),
+    linear-gradient(110deg, #171923, #08090d 75%);
+  border-bottom: 1px solid var(--line);
+}
 
-    .section-heading {
-      font-size: 25px;
-      margin-bottom: 18px;
-    }
+.hero-content {
+  max-width: 720px;
+}
 
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 28px;
-    }
+.eyebrow {
+  color: #ff5577;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
 
-    input, select {
-      background: var(--surface);
-      color: white;
-      border: 1px solid #303748;
-      border-radius: 7px;
-      padding: 13px;
-      font-size: 15px;
-    }
+h1 {
+  font-size: clamp(40px, 7vw, 76px);
+  line-height: 1.02;
+  margin: 18px 0;
+  letter-spacing: -2px;
+}
 
-    input {
-      flex: 1;
-      min-width: 190px;
-    }
+.hero p {
+  color: var(--muted);
+  max-width: 560px;
+  line-height: 1.8;
+  font-size: 16px;
+}
 
-    select {
-      min-width: 145px;
-    }
+.primary-button, .secondary-button {
+  display: inline-block;
+  border: 0;
+  border-radius: 6px;
+  padding: 13px 19px;
+  margin: 12px 8px 0 0;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: bold;
+}
 
-    .movie-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 20px;
-    }
+.primary-button {
+  background: var(--accent);
+  color: white;
+}
 
-    .movie {
-      background: var(--surface);
-      border-radius: 10px;
-      overflow: hidden;
-      border: 1px solid #242a39;
-      transition: transform .2s;
-    }
+.secondary-button {
+  background: #252733;
+  color: white;
+}
 
-    .movie:hover {
-      transform: translateY(-5px);
-    }
+.primary-button:hover, .secondary-button:hover {
+  filter: brightness(1.15);
+}
 
-    .poster {
-      min-height: 235px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 15px;
-      font-size: 25px;
-      font-weight: 900;
-      letter-spacing: 2px;
-      background: linear-gradient(145deg, #52213f, #17243d);
-      background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Film_reel_icon.svg/512px-Film_reel_icon.svg.png');
-     background-size: cover; 
-       
-    }
+main {
+  padding: 38px 6% 70px;
+}
 
-    .poster.p2 { background: linear-gradient(145deg, #123b50, #15152c); }
-    .poster.p3 { background: linear-gradient(145deg, #593b18, #24172f); }
-    .poster.p4 { background: linear-gradient(145deg, #253c28, #111c2b); }
-    .poster.p5 { background: linear-gradient(145deg, #572020, #17172c); }
-    .poster.p6 { background: linear-gradient(145deg, #29275b, #11131d); }
-    .poster.p7 { background: linear-gradient(145deg, #14534b, #172238); }
-    .poster.p8 { background: linear-gradient(145deg, #5b3d12, #29172c); }
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  flex-wrap: wrap;
+}
 
-    .movie-info {
-      padding: 15px;
-    }
+h2 {
+  font-size: 26px;
+  margin: 0 0 8px;
+}
 
-    .movie-info h3 {
-      font-size: 17px;
-      margin-bottom: 5px;
-    }
+.section-description {
+  color: var(--muted);
+  margin: 0 0 24px;
+  line-height: 1.6;
+}
 
-    .movie-info p {
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 13px;
-    }
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0 28px;
+}
 
-    .movie button {
-      width: 100%;
-      padding: 9px;
-    }
+.controls input, .controls select {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 13px;
+  min-width: 180px;
+  outline: none;
+}
 
-    #empty {
-      color: var(--muted);
-      padding: 25px 0;
-      display: none;
-    }
+.controls input {
+  flex: 1;
+}
 
-    footer {
-      text-align: center;
-      padding: 28px 15px;
-      color: var(--muted);
-      border-top: 1px solid #252a38;
-      margin-top: 45px;
-      font-size: 13px;
-    }
+.controls input:focus, .controls select:focus {
+  border-color: var(--accent);
+}
 
-    footer strong {
-      color: var(--accent);
-    }
+.movie-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
 
-    @media (max-width: 600px) {
-      header {
-        flex-direction: column;
-      }
+.movie-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform .2s, border-color .2s;
+}
 
-      nav a {
-        margin: 0 8px;
-      }
+.movie-card:hover {
+  transform: translateY(-5px);
+  border-color: #555969;
+}
 
-      .hero {
-        padding: 55px 7%;
-      }
+.poster {
+  min-height: 210px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 25%, rgba(255,255,255,.12), transparent 35%),
+    linear-gradient(145deg, var(--poster1), var(--poster2));
+}
 
-      main {
-        padding: 28px 5%;
-      }
+.poster span {
+  font-size: 27px;
+  font-weight: 900;
+  line-height: 1.15;
+  text-shadow: 0 3px 12px #000;
+}
 
-      .movie-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-      }
+.movie-info {
+  padding: 15px;
+}
 
-      .poster {
-        min-height: 175px;
-        font-size: 19px;
-      }
+.movie-info h3 {
+  margin: 0 0 9px;
+  font-size: 17px;
+}
 
-      .movie-info {
-        padding: 10px;
-      }
-    }
-  </style>
+.movie-meta {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.movie-info p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 60px;
+}
+
+.details-button {
+  width: 100%;
+  padding: 11px;
+  border: 1px solid #3a3d49;
+  background: #20222c;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.details-button:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.empty {
+  display: none;
+  padding: 35px 10px;
+  color: var(--muted);
+  text-align: center;
+  grid-column: 1 / -1;
+}
+
+.legal-section {
+  margin-top: 65px;
+  padding: 28px;
+  background: #11131a;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.legal-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.legal-item {
+  padding: 17px;
+  background: #191b25;
+  border-radius: 7px;
+}
+
+.legal-item h3 {
+  margin: 0 0 8px;
+}
+
+.legal-item p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.legal-item a {
+  color: #ff6b89;
+}
+
+.notice {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+footer {
+  padding: 28px 6%;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+dialog {
+  max-width: 500px;
+  width: calc(100% - 30px);
+  background: #171923;
+  color: white;
+  border: 1px solid #3b3e4b;
+  border-radius: 12px;
+  padding: 25px;
+}
+
+dialog::backdrop {
+  background: rgba(0,0,0,.8);
+}
+
+dialog p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 950px) {
+  .movie-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  header {
+    padding: 15px 5%;
+    flex-wrap: wrap;
+  }
+
+  nav {
+    gap: 14px;
+  }
+
+  nav a {
+    font-size: 12px;
+  }
+
+  .hero {
+    min-height: 360px;
+    padding: 55px 6%;
+  }
+
+  main {
+    padding: 30px 5% 50px;
+  }
+
+  .movie-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .poster {
+    min-height: 160px;
+  }
+
+  .poster span {
+    font-size: 21px;
+  }
+
+  .movie-info {
+    padding: 11px;
+  }
+
+  .movie-info h3 {
+    font-size: 15px;
+  }
+
+  .movie-info p {
+    min-height: 85px;
+  }
+
+  .legal-list {
+    grid-template-columns: 1fr;
+  }
+
+  .controls input, .controls select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 350px) {
+  .movie-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
 </head>
+
 <body>
+<header>
+  <a class="logo" href="#" aria-label="ShadowFlix home">SHADOWFLIX</a>
+  <nav aria-label="Main navigation">
+    <a href="#discover">Discover</a>
+    <a href="#classics">Classic films</a>
+    <a href="#about">About</a>
+  </nav>
+</header>
 
-  <header>
-    <div class="logo">SHADOWFLIX</div>
-    <nav>
-      <a href="#home">Home</a>
-      <a href="#movies">Movies</a>
-      <a href="#about">About</a>
-    </nav>
-  </header>
-
-  <section class="hero" id="home">
-    <small>WELCOME TO SHADOWFLIX</small>
-    <h1>Discover Your Next Favourite Movie.</h1>
-    <p>Explore movies, discover new stories and find something worth watching.</p>
-    <button onclick="document.getElementById('movies').scrollIntoView({behavior:'smooth'})">
-      Explore Movies
-    </button>
-  </section>
-
-  <main id="movies">
-    <h2 class="section-heading">Explore Movies</h2>
-
-    <div class="controls">
-      <input
-        type="search"
-        id="search"
-        placeholder="Search for a movie..."
-        aria-label="Search movies"
-      >
-
-      <select id="genre" aria-label="Filter by genre">
-        <option value="all">All genres</option>
-        <option value="Action">Action</option>
-        <option value="Adventure">Adventure</option>
-        <option value="Comedy">Comedy</option>
-        <option value="Drama">Drama</option>
-        <option value="Sci-Fi">Sci-Fi</option>
-        <option value="Fantasy">Fantasy</option>
-      </select>
-    </div>
-
-    <div class="movie-grid" id="movieGrid"></div>
-    <p id="empty">No movies found. Try another search.</p>
-  </main>
-
-  <footer id="about">
-    <p><strong>SHADOWFLIX</strong> — Discover stories. Explore cinema.</p>
-    <p>Movie discovery demo. Movie titles and artwork are illustrative placeholders.</p>
-  </footer>
-
-  <script>
-    const movies = [
-      { title: "Shadow Hunter", genre: "Action", year: 2025, color: "p1", description: "An original fictional action adventure." },
-      { title: "Beyond Earth", genre: "Sci-Fi", year: 2024, color: "p2", description: "An original fictional journey beyond our planet." },
-      { title: "Golden Quest", genre: "Adventure", year: 2025, color: "p3", description: "An original fictional adventure full of mystery." },
-      { title: "Wild Kingdom", genre: "Drama", year: 2023, color: "p4", description: "An original fictional story about life and nature." },
-      { title: "Last Mission", genre: "Action", year: 2024, color: "p5", description: "An original fictional mission against the odds." },
-      { title: "Dream World", genre: "Fantasy", year: 2025, color: "p6", description: "An original fictional fantasy adventure." },
-      { title: "Ocean Mystery", genre: "Adventure", year: 2023, color: "p7", description: "An original fictional mystery beneath the sea." },
-      { title: "Funny Business", genre: "Comedy", year: 2024, color: "p8", description: "An original fictional comedy." }
-    ];
-
-    const grid = document.getElementById("movieGrid");
-    const search = document.getElementById("search");
-    const genre = document.getElementById("genre");
-    const empty = document.getElementById("empty");
-
-    function displayMovies() {
-      const term = search.value.toLowerCase().trim();
-      const selectedGenre = genre.value;
-
-      const filtered = movies.filter(movie =>
-        movie.title.toLowerCase().includes(term) &&
-        (selectedGenre === "all" || movie.genre === selectedGenre)
-      );
-
-      grid.innerHTML = "";
-
-      filtered.forEach(movie => {
-        const card = document.createElement("article");
-        card.className = "movie";
-
-        const poster = document.createElement("div");
-        poster.className = "poster " + movie.color;
-        poster.textContent = movie.title;
-
-        const info = document.createElement("div");
-        info.className = "movie-info";
-
-        const heading = document.createElement("h3");
-        heading.textContent = movie.title;
-
-        const details = document.createElement("p");
-        details.textContent = movie.genre + " • " + movie.year;
-
-        const button = document.createElement("button");
-        button.textContent = "View Details";
-        button.addEventListener("click", () => {
-          alert(movie.title + "\n\n" + movie.description +
-            "\n\nThis is a demo listing. No movie is hosted here.");
-        });
-
-        info.append(heading, details, button);
-        card.append(poster, info);
-        grid.appendChild(card);
-      });
-
-      empty.style.display = filtered.length ? "none" : "block";
-    }
-
-    search.addEventListener("input", displayMovies);
-    genre.addEventListener("change", displayMovies);
-
-    displayMovies();
-  </script>
-<section id="public-domain" style="padding:35px 0;">
-  <h2 class="section-heading">Public-Domain Classics</h2>
-  <p style="color:#a3a9b8;margin-bottom:20px;">
-    Explore classic films available to watch online.
-  </p>
-
-  <div class="movie-grid">
-
-    <article class="movie">
-      <div class="poster p1">Night of the Living Dead</div>
-      <div class="movie-info">
-        <h3>Night of the Living Dead</h3>
-        <p>1968 • Horror</p>
-        <button onclick="window.open('https://archive.org/details/night_of_the_living_dead','_blank')">
-          Find Film
-        </button>
-      </div>
-    </article>
-
-    <article class="movie">
-      <div class="poster p2">His Girl Friday</div>
-      <div class="movie-info">
-        <h3>His Girl Friday</h3>
-        <p>1940 • Comedy</p>
-        <button onclick="window.open('https://archive.org/search?query=His+Girl+Friday+1940','_blank')">
-          Find Film
-        </button>
-      </div>
-    </article>
-
-    <article class="movie">
-      <div class="poster p3">The General</div>
-      <div class="movie-info">
-        <h3>The General</h3>
-        <p>1926 • Comedy</p>
-        <button onclick="window.open('https://archive.org/search?query=The+General+1926+Buster+Keaton','_blank')">
-          Find Film
-        </button>
-      </div>
-    </article>
-
+<section class="hero">
+  <div class="hero-content">
+    <div class="eyebrow">Your next movie starts here</div>
+    <h1>ENTER THE<br>WORLD OF FILM.</h1>
+    <p>Discover stories, explore movie genres, and find films worth watching. Your next favourite could be one search away.</p>
+    <a class="primary-button" href="#discover">Explore movies ↓</a>
+    <a class="secondary-button" href="#classics">Find classic films</a>
   </div>
 </section>
 
+<main>
+  <section id="discover">
+    <div class="section-heading">
+      <h2>Discover movies</h2>
+    </div>
+    <p class="section-description">Search the collection or choose a genre to find something new.</p>
+
+    <div class="controls">
+      <input id="search" type="search" placeholder="Search movie titles..." aria-label="Search movies">
+      <select id="genre" aria-label="Filter by genre">
+        <option value="all">All genres</option>
+        <option value="Action">Action</option>
+        <option value="Sci-Fi">Sci-Fi</option>
+        <option value="Adventure">Adventure</option>
+        <option value="Mystery">Mystery</option>
+        <option value="Drama">Drama</option>
+      </select>
+    </div>
+
+    <div class="movie-grid" id="movieGrid">
+      <article class="movie-card" data-title="Beyond the Horizon" data-genre="Sci-Fi" data-year="2026" data-description="A crew ventures beyond known space and discovers a mystery that could change humanity." data-colour="linear-gradient(145deg,#172a55,#101018)">
+        <div class="poster" style="--poster1:#284f82;--poster2:#11111b"><span>BEYOND<br>THE HORIZON</span></div>
+        <div class="movie-info">
+          <h3>Beyond the Horizon</h3>
+          <div class="movie-meta">Sci-Fi · Concept preview</div>
+          <p>A journey beyond the limits of known space.</p>
+          <button class="details-button">View details</button>
+        </div>
+      </article>
+
+      <article class="movie-card" data-title="Shadow Protocol" data-genre="Action" data-year="2026" data-description="A fictional action-thriller concept about a team racing to uncover a hidden conspiracy." data-colour="linear-gradient(145deg,#68212b,#101018)">
+        <div class="poster" style="--poster1:#852b39;--poster2:#171017"><span>SHADOW<br>PROTOCOL</span></div>
+        <div class="movie-info">
+          <h3>Shadow Protocol</h3>
+          <div class="movie-meta">Action · Concept preview</div>
+          <p>A race against time to reveal the truth.</p>
+          <button class="details-button">View details</button>
+        </div>
+      </article>
+
+      <article class="movie-card" data-title="The Last Signal" data-genre="Mystery" data-year="2026" data-description="A fictional mystery concept in which a strange signal leads to an unexpected discovery." data-colour="linear-gradient(145deg,#245e59,#101018)">
+        <div class="poster" style="--poster1:#246c65;--poster2:#10191d"><span>THE LAST<br>SIGNAL</span></div>
+        <div class="movie-info">
+          <h3>The Last Signal</h3>
+          <div class="movie-meta">Mystery · Concept preview</div>
+          <p>One mysterious signal. A thousand questions.</p>
+          <button class="details-button">View details</button>
+        </div>
+      </article>
+
+      <article class="movie-card" data-title="Kingdom of Ash" data-genre="Adventure" data-year="2026" data-description="A fictional adventure concept about a lost kingdom and a daring search for its secrets." data-colour="linear-gradient(145deg,#765022,#171019)">
+        <div class="poster" style="--poster1:#80562c;--poster2:#21151b"><span>KINGDOM<br>OF ASH</span></div>
+        <div class="movie-info">
+          <h3>Kingdom of Ash</h3>
+          <div class="movie-meta">Adventure · Concept preview</div>
+          <p>An ancient world hides a powerful secret.</p>
+          <button class="details-button">View details</button>
+        </div>
+      </article>
+
+      <article class="movie-card" data-title="Neon City" data-genre="Sci-Fi" data-year="2026" data-description="A fictional futuristic city concept where a young inventor uncovers a digital mystery." data-colour="linear-gradient(145deg,#572c81,#101018)">
+        <div class="poster" style="--poster1:#703ca1;--poster2:#14101e"><span>NEON<br>CITY</span></div>
+        <div class="movie-info">
+          <h3>Neon City</h3>
+          <div class="movie-meta">Sci-Fi · Concept preview</div>
+          <p>In the future, nothing is quite what it seems.</p>
+          <button class="details-button">View details</button>
+        </div>
+      </article>
+
+      <article class="movie-card" data-title="Silent Witness" data-genre="Mystery" data-year="2026" data-description="A fictional detective story concept built around a puzzling case and a missing clue." data-colour="linear-gradient(145deg,#414755,#101018)">
+        <div class="poster" style="--poster1:#545b69;--poster2:#12131b"><span>SILENT<br>WITNESS</span></div>
+        <div class="movie-info">
+          <h3>Silent Witness</h3>
+          <div class="movie-meta">Mystery · Concept preview</div>
+          <p>Every clue leads to another question.</p>
+          <button class="details-button">View details</button>
+        </div>
+      </article>
+
+      <article class="movie-card" data-title="The Long Road" data-genre="Drama" data-year="2026" data-description="A fictional drama concept about friendship, courage, and the choices that shape a life." data-colour="linear-gradient(145deg,#81533d,#16121a)">
+        <div class="poster" style="--poster1:#996344;--poster2:#21151a"><span>THE LONG<br>ROAD</span></div>
+        <div class="movie-info">
+          <h3>The Long Road</h3>
+          <div class="movie-meta">Drama · Concept preview</div>
+          <p>A journey that changes everything.</p>
+          <button class="details-button">View details</button>
+        </div>
+      </article>
+
+      <article class="movie-card" data-title="Velocity" data-genre="Action" data-year="2026" data-description="A fictional high-speed action concept about a daring challenge and an unexpected rival." data-colour="linear-gradient(145deg,#9b3d24,#171018)">
+        <div class="poster" style="--poster1:#a84228;--poster2:#211019"><span>VELO<br>CITY</span></div>
+        <div class="movie-info">
+          <h3>Velocity</h3>
+          <div class="movie-meta">Action · Concept preview</div>
+          <p>One challenge. No room for mistakes.</p>
+          <button class="details-button">View details</button>
+        </div>
+      </article>
+
+      <div class="empty" id="empty">No movies match your search. Try another title or genre.</div>
+    </div>
+  </section>
+
+  <section class="legal-section" id="classics">
+    <h2>Explore classic films</h2>
+    <p class="section-description">Use these resources to discover films. Check the individual film's rights and availability before watching or reusing it.</p>
+
+    <div class="legal-list">
+      <div class="legal-item">
+        <h3>Internet Archive</h3>
+        <p>Search for classic films and inspect the rights information on each film's page.</p>
+        <a href="https://archive.org/details/movies" target="_blank" rel="noopener noreferrer">Explore film collection ↗</a>
+      </div>
+      <div class="legal-item">
+        <h3>Wikimedia Commons</h3>
+        <p>Find freely licensed or public-domain media, checking the licence on each file.</p>
+        <a href="https://commons.wikimedia.org/wiki/Category:Films" target="_blank" rel="noopener noreferrer">Explore film media ↗</a>
+      </div>
+      <div class="legal-item">
+        <h3>Library of Congress</h3>
+        <p>Discover historical films and moving images. Check each item's rights and access notes.</p>
+        <a href="https://www.loc.gov/film-and-videos/" target="_blank" rel="noopener noreferrer">Explore the collection ↗</a>
+      </div>
+      <div class="legal-item">
+        <h3>Public Domain Movies</h3>
+        <p>Learn about public-domain films and find titles to research before adding them to your collection.</p>
+        <a href="https://publicdomainmovie.net/" target="_blank" rel="noopener noreferrer">Browse the site ↗</a>
+      </div>
+    </div>
+
+    <p class="notice">Note: The movie cards above are fictional design previews, not real films and not playable videos. ShadowFlix currently helps you discover films; it does not host or stream movies. External sites have their own terms and rights information.</p>
+  </section>
+
+  <section class="legal-section" id="about">
+    <h2>About ShadowFlix</h2>
+    <p class="section-description">A movie discovery project built to make exploring film simple. Search, filter, discover, and follow links to external film collections.</p>
+  </section>
+</main>
+
+<footer>
+  <strong>SHADOWFLIX</strong><br>
+  Discover stories. Explore cinema.<br>
+  <span>Independent project · External film links are provided for discovery.</span>
+</footer>
+
+<dialog id="movieDialog">
+  <h2 id="dialogTitle">Movie title</h2>
+  <p id="dialogMeta"></p>
+  <p id="dialogDescription"></p>
+  <div class="dialog-actions">
+    <button class="primary-button" id="closeDialog">Close details</button>
+    <a class="secondary-button" href="#classics" id="dialogExplore">Explore film sources</a>
+  </div>
+</dialog>
+
+<script>
+const searchInput = document.getElementById("search");
+const genreSelect = document.getElementById("genre");
+const cards = [...document.querySelectorAll(".movie-card")];
+const emptyMessage = document.getElementById("empty");
+
+function filterMovies() {
+  const query = searchInput.value.trim().toLowerCase();
+  const genre = genreSelect.value;
+  let visible = 0;
+
+  cards.forEach(card => {
+    const title = card.dataset.title.toLowerCase();
+    const cardGenre = card.dataset.genre;
+    const matchesQuery = title.includes(query);
+    const matchesGenre = genre === "all" || genre === cardGenre;
+    const show = matchesQuery && matchesGenre;
+
+    card.style.display = show ? "" : "none";
+    if (show) visible++;
+  });
+
+  emptyMessage.style.display = visible ? "none" : "block";
+}
+
+searchInput.addEventListener("input", filterMovies);
+genreSelect.addEventListener("change", filterMovies);
+
+const movieDialog = document.getElementById("movieDialog");
+
+cards.forEach(card => {
+  card.querySelector(".details-button").addEventListener("click", () => {
+    document.getElementById("dialogTitle").textContent = card.dataset.title;
+    document.getElementById("dialogMeta").textContent =
+      card.dataset.genre + " · " + card.dataset.year + " · Fictional concept";
+    document.getElementById("dialogDescription").textContent = card.dataset.description;
+    movieDialog.showModal();
+  });
+});
+
+document.getElementById("closeDialog").addEventListener("click", () => {
+  movieDialog.close();
+});
+
+document.getElementById("dialogExplore").addEventListener("click", () => {
+  movieDialog.close();
+});
+</script>
 </body>
 </html>
