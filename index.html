@@ -483,5 +483,14 @@
       dialog.close();
     });
   </script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/SHADOWFLIX/service-worker.js")
+      .then(() => console.log("ShadowFlix is ready!"))
+      .catch(error => console.error("Service worker error:", error));
+  });
+}
+</script>
 </body>
 </html>
