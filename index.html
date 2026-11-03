@@ -12,7 +12,16 @@ body{margin:0;background:#090812;color:#fff;font-family:Arial,sans-serif}
 header{padding:22px 7%;display:flex;justify-content:space-between;align-items:center;background:#100d1c}
 .logo{font-size:25px;font-weight:900;color:#a78bfa;letter-spacing:2px}
 nav a{color:#ddd;text-decoration:none;margin-left:20px}
-.hero{padding:65px 7% 45px;background:linear-gradient(90deg,#171027,#090812)}
+.hero{
+  padding:90px 7% 65px;
+  background:
+    linear-gradient(90deg,#090812 5%,#090812dd 45%,#09081255),
+    linear-gradient(135deg,#39205f,#100d1c);
+  min-height:380px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
 .hero h1{font-size:clamp(32px,6vw,58px);margin:0 0 12px}
 .hero p{color:#bbb}
 .search{display:flex;gap:10px;flex-wrap:wrap;margin-top:25px}
@@ -241,7 +250,13 @@ async function loadMovies(append = false) {
     }
 
     const data = await api(path);
+const featured = data.results?.find(movie => movie.backdrop_path);
 
+if (featured && !currentQuery && !currentGenre) {
+  document.querySelector(".hero").style.background =
+    `linear-gradient(90deg,#090812 5%,#090812dd 45%,#09081255),
+    url("https://image.tmdb.org/t/p/original${featured.backdrop_path}") center/cover`;
+}
     showMovies(data.results || [], append);
 
     statusText.textContent =
