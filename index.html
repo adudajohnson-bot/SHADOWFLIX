@@ -36,7 +36,19 @@ footer{text-align:center;padding:35px 7%;background:#100d1c;color:#aaa;font-size
 .dialog-box img{width:130px;float:left;margin:0 18px 12px 0;border-radius:8px}
 .dialog-box p{color:#ccc;line-height:1.6}
 .close{float:right;background:#382b4e}
-@media(max-width:550px){nav a{margin-left:8px;font-size:12px}.hero{padding-top:45px}.movies{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}}
+.trailer-section {
+  clear: both;
+  margin-top: 25px;
+}
+
+.trailer-section iframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: 12px;
+  background: #000;
+}
+  @media(max-width:550px){nav a{margin-left:8px;font-size:12px}.hero{padding-top:45px}.movies{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}}
 </style>
 </head>
 <body>
@@ -228,9 +240,46 @@ async function showDetails(id) {
 
     const genres = document.createElement("p");
     genres.textContent = "Genres: " + movie.genres.map(g => g.name).join(", ");
+content.append(title, details, description, genres);
 
-    content.append(title, details, description, genres);
-    document.getElementById("movieDialog").style.display = "flex";
+// Load the movie trailer
+const trailerSection = document.createElement("div");
+trailerSection.className = "trailer-section";
+
+const trailerHeading = document.createElement("h3");
+trailerHeading.textContent = "Watch Trailer";
+trailerSection.appendChild(trailerHeading);
+
+try {
+  const videoData = await api(`/movie/${id}/videos?language=en-US`);
+
+  const trailer = videoData.results.find(video =>
+    video.site === "YouTube" &&
+    video.type === "Trailer" &&
+    video.official
+  ) || videoData.results.find(video =>
+    video.site === "YouTube" &&
+    video.type === "Trailer"
+  );
+
+  if (trailer) {
+    const iframe = document.createElement("iframe");
+    iframe.src = `https://www.youtube-nocookie.com/embed/${trailer.key}`;
+    iframe.title = "Movie trailer";
+    iframe.allowFullscreen = true;
+    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+    trailerSection.appendChild(iframe);
+  } else {
+    trailerHeading.textContent = "No trailer available for this movie.";
+  }
+} catch (error) {
+  trailerHeading.textContent = "Could not load trailer.";
+}
+
+content.appendChild(trailerSection);
+
+document.getElementById("movieDialog").style.display = "flex";
+  
   } catch (error) {
     alert("Could not load movie details.");
   }
