@@ -79,7 +79,7 @@ nav a{margin-left:8px;font-size:12px}
 <option value="upcoming">Upcoming</option>
 </select>
 </div>
-
+<button id="watchlistButton">My Watchlist ❤️</button>
 <div id="status" class="status">Loading movies...</div>
 <div id="movieGrid" class="movies"></div>
 
@@ -126,7 +126,12 @@ let page = 1;
 let currentMode = "popular";
 let currentQuery = "";
 let currentGenre = "";
+let watchlist = JSON.parse(localStorage.getItem("shadowflixWatchlist") || "[]");
+let showingWatchlist = false;
 
+function saveWatchlist() {
+  localStorage.setItem("shadowflixWatchlist", JSON.stringify(watchlist));
+}
 async function api(path) {
   const separator = path.includes("?") ? "&" : "?";
 
@@ -189,8 +194,28 @@ function showMovies(movies, append = false) {
     const button = document.createElement("button");
     button.textContent = "View details";
     button.addEventListener("click", () => showDetails(movie.id));
+const watchButton = document.createElement("button");
 
-    info.append(title, meta, button);
+watchButton.textContent = watchlist.some(m => m.id === movie.id)
+  ? "♥ Saved"
+  : "+ Add to Watchlist";
+
+watchButton.style.background = "#382b4e";
+
+watchButton.addEventListener("click", () => {
+  const exists = watchlist.some(m => m.id === movie.id);
+
+  if (exists) {
+    watchlist = watchlist.filter(m => m.id !== movie.id);
+    watchButton.textContent = "+ Add to Watchlist";
+  } else {
+    watchlist.push(movie);
+    watchButton.textContent = "♥ Saved";
+  }
+
+  saveWatchlist();
+});
+   info.append(title, meta, button, watchButton);
     card.append(image, info);
     grid.appendChild(card);
   });
@@ -232,7 +257,15 @@ async function loadMovies(append = false) {
       "Unable to load movies. Check your API key and internet connection.";
   }
 }
+function displayWatchlist() {
+  showingWatchlist = true;
 
+  document.getElementById("heading").textContent = "My Watchlist ❤️";
+
+  statusText.textContent = `${watchlist.length} saved movies`;
+
+  showMovies(watchlist);
+}
 async function showDetails(id) {
   const dialog = document.getElementById("movieDialog");
   const content = document.getElementById("dialogContent");
@@ -319,7 +352,14 @@ async function showDetails(id) {
     content.innerHTML = "<p>Could not load movie details. Please try again.</p>";
   }
 }
-
+document.getElementById("watchlistButton").addEventListener("click", () => {
+  if (showingWatchlist) {
+    showingWatchlist = false;
+    loadMovies();
+  } else {
+    displayWatchlist();
+  }
+});
 document.getElementById("searchButton").addEventListener("click", () => {
   currentQuery = searchInput.value.trim();
   currentGenre = "";
