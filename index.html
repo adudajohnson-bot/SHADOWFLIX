@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SHADOWFLIX | Discover Movies</title>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#090812;color:#fff;font-family:Arial,sans-serif}
@@ -32,25 +33,20 @@ main{padding:35px 7%}
 .status{color:#b9a9d7;margin:20px 0}
 footer{text-align:center;padding:35px 7%;background:#100d1c;color:#aaa;font-size:13px;line-height:1.7}
 .dialog{display:none;position:fixed;inset:0;background:#000d;z-index:5;align-items:center;justify-content:center;padding:18px}
-.dialog-box{background:#191427;border:1px solid #51416d;border-radius:14px;max-width:650px;width:100%;padding:25px;max-height:90vh;overflow:auto}
+.dialog-box{background:#191427;border:1px solid #51416d;border-radius:14px;max-width:700px;width:100%;padding:25px;max-height:90vh;overflow:auto}
 .dialog-box img{width:130px;float:left;margin:0 18px 12px 0;border-radius:8px}
 .dialog-box p{color:#ccc;line-height:1.6}
 .close{float:right;background:#382b4e}
-.trailer-section {
-  clear: both;
-  margin-top: 25px;
+.trailer-section{clear:both;margin-top:25px}
+.trailer-section iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;background:#000}
+@media(max-width:550px){
+nav a{margin-left:8px;font-size:12px}
+.hero{padding-top:45px}
+.movies{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
 }
-
-.trailer-section iframe {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border: 0;
-  border-radius: 12px;
-  background: #000;
-}
-  @media(max-width:550px){nav a{margin-left:8px;font-size:12px}.hero{padding-top:45px}.movies{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}}
 </style>
 </head>
+
 <body>
 
 <header>
@@ -65,7 +61,7 @@ footer{text-align:center;padding:35px 7%;background:#100d1c;color:#aaa;font-size
 <h1>Discover your next movie.</h1>
 <p>Explore thousands of movies. Find your next favourite.</p>
 <div class="search">
-<input id="searchInput" placeholder="Search movies..." />
+<input id="searchInput" placeholder="Search movies...">
 <select id="genreFilter">
 <option value="">All genres</option>
 </select>
@@ -83,8 +79,10 @@ footer{text-align:center;padding:35px 7%;background:#100d1c;color:#aaa;font-size
 <option value="upcoming">Upcoming</option>
 </select>
 </div>
+
 <div id="status" class="status">Loading movies...</div>
 <div id="movieGrid" class="movies"></div>
+
 <div style="text-align:center;margin-top:30px">
 <button id="loadMore">Load more movies</button>
 </div>
@@ -93,8 +91,9 @@ footer{text-align:center;padding:35px 7%;background:#100d1c;color:#aaa;font-size
 <section id="about" style="padding:25px 7% 45px">
 <h2>About SHADOWFLIX</h2>
 <p style="color:#bbb;line-height:1.7">
-SHADOWFLIX helps you discover movies, explore genres, read descriptions
-and check ratings. It is a movie discovery website, not a streaming service.
+SHADOWFLIX helps you discover movies, explore genres,
+read descriptions, check ratings and find trailers.
+It is a movie discovery website, not a streaming service.
 </p>
 </section>
 
@@ -112,7 +111,8 @@ and check ratings. It is a movie discovery website, not a streaming service.
 </div>
 
 <script>
-const API_KEY = "abc123yourkey";
+// PASTE YOUR TMDB API KEY (v3) BETWEEN THE QUOTATION MARKS
+const API_KEY = "c62372d2ec3bf2b8ea24a7ccc0b1f4d1";
 const BASE = "https://api.themoviedb.org/3";
 const IMAGE = "https://image.tmdb.org/t/p/w500";
 
@@ -144,6 +144,7 @@ async function api(path) {
 async function loadGenres() {
   try {
     const data = await api("/genre/movie/list?language=en");
+
     data.genres.forEach(genre => {
       const option = document.createElement("option");
       option.value = genre.id;
@@ -177,8 +178,13 @@ function showMovies(movies, append = false) {
 
     const meta = document.createElement("div");
     meta.className = "meta";
-    const year = movie.release_date ? movie.release_date.slice(0,4) : "Year unknown";
-    meta.textContent = `${year}  •  ★ ${movie.vote_average?.toFixed(1) || "N/A"}`;
+
+    const year = movie.release_date
+      ? movie.release_date.slice(0,4)
+      : "Year unknown";
+
+    meta.textContent =
+      `${year} • ★ ${movie.vote_average?.toFixed(1) || "N/A"}`;
 
     const button = document.createElement("button");
     button.textContent = "View details";
@@ -210,21 +216,33 @@ async function loadMovies(append = false) {
     }
 
     const data = await api(path);
+
     showMovies(data.results || [], append);
-    statusText.textContent = `${data.total_results.toLocaleString()} movies found`;
+
+    statusText.textContent =
+      `${(data.total_results || 0).toLocaleString()} movies found`;
+
     document.getElementById("heading").textContent =
       currentQuery ? `Results for "${currentQuery}"` :
       currentGenre ? "Movies by genre" :
       currentMode.replace("_", " ").replace(/\b\w/g, c => c.toUpperCase());
+
   } catch (error) {
-    statusText.textContent = "Unable to load movies. Check your API key and internet connection.";
+    statusText.textContent =
+      "Unable to load movies. Check your API key and internet connection.";
   }
 }
 
 async function showDetails(id) {
+  const dialog = document.getElementById("movieDialog");
+  const content = document.getElementById("dialogContent");
+
+  dialog.style.display = "flex";
+  content.innerHTML = "<p>Loading movie details...</p>";
+
   try {
     const movie = await api(`/movie/${id}?language=en-US`);
-    const content = document.getElementById("dialogContent");
+
     content.innerHTML = "";
 
     if (movie.poster_path) {
@@ -242,52 +260,63 @@ async function showDetails(id) {
       `Release: ${movie.release_date || "Unknown"} | Rating: ${movie.vote_average}/10`;
 
     const description = document.createElement("p");
-    description.textContent = movie.overview || "No description available.";
+    description.textContent =
+      movie.overview || "No description available.";
 
     const genres = document.createElement("p");
-    genres.textContent = "Genres: " + movie.genres.map(g => g.name).join(", ");
-content.append(title, details, description, genres);
+    genres.textContent =
+      "Genres: " + movie.genres.map(g => g.name).join(", ");
 
-// Load the movie trailer
-const trailerSection = document.createElement("div");
-trailerSection.className = "trailer-section";
+    content.append(title, details, description, genres);
 
-const trailerHeading = document.createElement("h3");
-trailerHeading.textContent = "Watch Trailer";
-trailerSection.appendChild(trailerHeading);
+    const trailerSection = document.createElement("div");
+    trailerSection.className = "trailer-section";
 
-try {
-  const videoData = await api(`/movie/${id}/videos?language=en-US`);
+    const trailerHeading = document.createElement("h3");
+    trailerHeading.textContent = "Watch Trailer";
+    trailerSection.appendChild(trailerHeading);
 
-  const trailer = videoData.results.find(video =>
-    video.site === "YouTube" &&
-    video.type === "Trailer" &&
-    video.official
-  ) || videoData.results.find(video =>
-    video.site === "YouTube" &&
-    video.type === "Trailer"
-  );
+    try {
+      let videoData = await api(`/movie/${id}/videos?language=en-US`);
 
-  if (trailer) {
-    const iframe = document.createElement("iframe");
-    iframe.src = `https://www.youtube-nocookie.com/embed/${trailer.key}`;
-    iframe.title = "Movie trailer";
-    iframe.allowFullscreen = true;
-    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
-    trailerSection.appendChild(iframe);
-  } else {
-    trailerHeading.textContent = "No trailer available for this movie.";
-  }
-} catch (error) {
-  trailerHeading.textContent = "Could not load trailer.";
-}
+      let trailer = videoData.results.find(video =>
+        video.site === "YouTube" &&
+        video.type === "Trailer" &&
+        video.official
+      ) || videoData.results.find(video =>
+        video.site === "YouTube" &&
+        video.type === "Trailer"
+      );
 
-content.appendChild(trailerSection);
+      if (!trailer) {
+        videoData = await api(`/movie/${id}/videos?language=en`);
+        trailer = videoData.results.find(video =>
+          video.site === "YouTube" &&
+          video.type === "Trailer"
+        );
+      }
 
-document.getElementById("movieDialog").style.display = "flex";
-  
+      if (trailer) {
+        const iframe = document.createElement("iframe");
+        iframe.src =
+          `https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}`;
+        iframe.title = "Movie trailer";
+        iframe.allowFullscreen = true;
+        iframe.allow =
+          "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+        trailerSection.appendChild(iframe);
+      } else {
+        trailerHeading.textContent = "No trailer available for this movie.";
+      }
+
+    } catch (error) {
+      trailerHeading.textContent = "Could not load trailer.";
+    }
+
+    content.appendChild(trailerSection);
+
   } catch (error) {
-    alert("Could not load movie details.");
+    content.innerHTML = "<p>Could not load movie details. Please try again.</p>";
   }
 }
 
@@ -299,7 +328,9 @@ document.getElementById("searchButton").addEventListener("click", () => {
 });
 
 searchInput.addEventListener("keydown", event => {
-  if (event.key === "Enter") document.getElementById("searchButton").click();
+  if (event.key === "Enter") {
+    document.getElementById("searchButton").click();
+  }
 });
 
 genreFilter.addEventListener("change", () => {
@@ -333,11 +364,12 @@ document.getElementById("movieDialog").addEventListener("click", event => {
   }
 });
 
-if (API_KEY === "YOUR_TMDB_API_KEY") {
+if (API_KEY === "PASTE_YOUR_V3_API_KEY_HERE") {
   statusText.textContent = "Add your TMDB API key in the code to load movies.";
 } else {
   loadGenres().then(loadMovies);
 }
 </script>
+
 </body>
 </html>
