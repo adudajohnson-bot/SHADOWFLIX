@@ -1,0 +1,886 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#090812">
+<title>SHADOWFLIX | Discover Movies</title>
+
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#090812;
+  --panel:#151322;
+  --panel2:#201c32;
+  --purple:#8b5cf6;
+  --pink:#ec4899;
+  --text:#fff;
+  --muted:#aaa5bd;
+}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,sans-serif;
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+header{
+  height:76px;
+  padding:0 6%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:#0d0b18;
+  border-bottom:1px solid #ffffff12;
+  position:sticky;
+  top:0;
+  z-index:20;
+}
+.logo{
+  font-size:25px;
+  font-weight:900;
+  letter-spacing:2px;
+  color:white;
+}
+.logo span{color:var(--purple)}
+nav{display:flex;gap:25px;align-items:center}
+nav button{
+  color:#ccc;
+  background:none;
+  border:0;
+  font-weight:bold;
+}
+nav button:hover,nav button.active{color:white}
+.hero{
+  min-height:490px;
+  padding:65px 7%;
+  display:flex;
+  align-items:center;
+  position:relative;
+  background:#171326;
+  overflow:hidden;
+}
+.hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,#090812 5%,#090812dd 42%,#09081255 100%);
+  z-index:1;
+}
+.hero-image{
+  position:absolute;
+  inset:0;
+  background-position:center 25%;
+  background-size:cover;
+  opacity:.65;
+}
+.hero-content{
+  position:relative;
+  z-index:2;
+  max-width:600px;
+}
+.eyebrow{
+  color:#c4a8ff;
+  font-weight:bold;
+  letter-spacing:3px;
+  font-size:12px;
+}
+.hero h1{
+  font-size:clamp(38px,6vw,66px);
+  margin:18px 0;
+  line-height:1.05;
+}
+.hero p{
+  color:#ddd;
+  line-height:1.7;
+  max-width:520px;
+}
+.primary,.secondary{
+  border:0;
+  border-radius:8px;
+  padding:13px 20px;
+  font-weight:bold;
+  margin:10px 8px 0 0;
+}
+.primary{
+  background:var(--purple);
+  color:white;
+}
+.secondary{
+  background:#ffffff20;
+  color:white;
+  border:1px solid #ffffff35;
+}
+.primary:hover{background:#7544df}
+.secondary:hover{background:#ffffff30}
+main{padding:35px 6% 70px}
+.search-area{
+  display:flex;
+  gap:10px;
+  margin-bottom:25px;
+}
+.search-area input{
+  flex:1;
+  min-width:0;
+  padding:14px 16px;
+  border-radius:8px;
+  border:1px solid #39334e;
+  background:var(--panel);
+  color:white;
+  outline:none;
+}
+.search-area input:focus{border-color:var(--purple)}
+.search-area button{
+  border:0;
+  border-radius:8px;
+  padding:0 20px;
+  background:var(--purple);
+  color:white;
+  font-weight:bold;
+}
+.filters{
+  display:flex;
+  gap:9px;
+  flex-wrap:wrap;
+  margin:20px 0 35px;
+}
+.chip{
+  background:var(--panel);
+  color:#ccc;
+  border:1px solid #39334e;
+  padding:9px 15px;
+  border-radius:30px;
+}
+.chip.active,.chip:hover{
+  background:var(--purple);
+  color:white;
+  border-color:var(--purple);
+}
+.section{margin:40px 0}
+.section-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:18px;
+}
+.section-heading h2{font-size:21px;margin:0}
+.section-heading button{
+  background:none;
+  border:0;
+  color:#b99aff;
+}
+.movie-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(155px,1fr));
+  gap:20px;
+}
+.movie-card{
+  min-width:0;
+  background:var(--panel);
+  border:1px solid #ffffff0d;
+  border-radius:11px;
+  overflow:hidden;
+  transition:.2s;
+}
+.movie-card:hover{
+  transform:translateY(-5px);
+  border-color:#8b5cf6aa;
+}
+.poster{
+  width:100%;
+  aspect-ratio:2/3;
+  object-fit:cover;
+  display:block;
+  background:#201c32;
+}
+.card-info{padding:11px}
+.card-info h3{
+  font-size:14px;
+  margin:0 0 8px;
+  min-height:34px;
+}
+.meta{font-size:12px;color:var(--muted)}
+.card-actions{display:flex;gap:6px;margin-top:12px}
+.card-actions button{
+  flex:1;
+  padding:8px 4px;
+  border:0;
+  border-radius:6px;
+  background:var(--panel2);
+  color:white;
+  font-size:11px;
+}
+.card-actions button:first-child{
+  background:var(--purple);
+}
+.card-actions button:hover{filter:brightness(1.2)}
+.empty{
+  color:var(--muted);
+  padding:30px 0;
+  text-align:center;
+}
+.hidden{display:none!important}
+#loadMore{
+  display:block;
+  margin:30px auto;
+  padding:12px 25px;
+  border:0;
+  border-radius:8px;
+  color:white;
+  background:var(--panel2);
+}
+#loadMore:hover{background:var(--purple)}
+.page-title{
+  font-size:30px;
+  margin:20px 0;
+}
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:50;
+  background:#000d;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+}
+.modal.open{display:flex}
+.modal-box{
+  width:min(850px,100%);
+  max-height:90vh;
+  overflow:auto;
+  background:#151322;
+  border:1px solid #ffffff20;
+  border-radius:14px;
+  position:relative;
+}
+.close{
+  position:sticky;
+  float:right;
+  top:10px;
+  margin:10px;
+  z-index:3;
+  background:#29243a;
+  color:white;
+  border:0;
+  border-radius:50%;
+  width:38px;
+  height:38px;
+  font-size:20px;
+}
+.detail-content{padding:25px}
+.detail-top{
+  display:grid;
+  grid-template-columns:190px 1fr;
+  gap:24px;
+}
+.detail-poster{
+  width:100%;
+  border-radius:9px;
+}
+.detail-content h2{font-size:29px;margin:0 0 12px}
+.detail-content p{color:#c7c2d5;line-height:1.7}
+.detail-meta{color:#c4a8ff;font-size:13px;line-height:1.8}
+.detail-section{
+  border-top:1px solid #ffffff18;
+  margin-top:23px;
+  padding-top:17px;
+}
+.detail-section h3{margin:0 0 12px}
+.provider-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.provider{
+  background:#252036;
+  padding:9px 12px;
+  border-radius:8px;
+  font-size:13px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.provider img{width:27px;height:27px;border-radius:6px}
+.trailer-frame{
+  width:100%;
+  aspect-ratio:16/9;
+  border:0;
+  border-radius:9px;
+  background:#080710;
+}
+footer{
+  text-align:center;
+  padding:35px 6%;
+  background:#0d0b18;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.8;
+}
+footer strong{color:white}
+@media(max-width:650px){
+  header{height:auto;min-height:68px;padding:15px 5%;flex-wrap:wrap;gap:14px}
+  .logo{font-size:21px}
+  nav{gap:15px}
+  nav button{font-size:12px}
+  .hero{min-height:420px;padding:45px 6%}
+  main{padding:25px 5% 55px}
+  .movie-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+  .card-info{padding:9px}
+  .card-actions button{font-size:10px}
+  .detail-top{grid-template-columns:105px 1fr;gap:14px}
+  .detail-content{padding:17px}
+  .detail-content h2{font-size:21px}
+  .search-area button{padding:0 13px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">SHADOW<span>FLIX</span></div>
+  <nav>
+    <button class="active" id="discoverNav">Discover</button>
+    <button id="watchlistNav">My Watchlist ❤️</button>
+    <button id="aboutNav">About</button>
+  </nav>
+</header>
+
+<section class="hero" id="hero">
+  <div class="hero-image" id="heroImage"></div>
+  <div class="hero-content">
+    <div class="eyebrow">YOUR NEXT MOVIE STARTS HERE</div>
+    <h1 id="heroTitle">Discover your next movie.</h1>
+    <p id="heroDescription">
+      Explore trending movies, discover new favourites,
+      check ratings and find where to watch.
+    </p>
+    <button class="primary" id="heroDetails">Explore Movie</button>
+    <button class="secondary" id="heroExplore">Explore Collection</button>
+  </div>
+</section>
+
+<main>
+  <div id="discoverPage">
+    <div class="search-area">
+      <input id="searchInput" type="search" placeholder="Search movies...">
+      <button id="searchButton">Search</button>
+    </div>
+
+    <div class="filters" id="genreFilters">
+      <button class="chip active" data-genre="">All genres</button>
+    </div>
+
+    <div id="collections">
+      <section class="section">
+        <div class="section-heading"><h2>🔥 Trending Movies</h2></div>
+        <div class="movie-grid" id="trendingGrid"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-heading"><h2>⭐ Top Rated Movies</h2></div>
+        <div class="movie-grid" id="topGrid"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-heading"><h2>🎬 Upcoming Movies</h2></div>
+        <div class="movie-grid" id="upcomingGrid"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-heading"><h2>🍿 Now Playing</h2></div>
+        <div class="movie-grid" id="playingGrid"></div>
+      </section>
+    </div>
+
+    <section class="section" id="resultsSection">
+      <div class="section-heading">
+        <h2 id="resultsTitle">Popular Movies</h2>
+      </div>
+      <div class="movie-grid" id="resultsGrid"></div>
+      <button id="loadMore">Load More Movies</button>
+    </section>
+  </div>
+
+  <div id="watchlistPage" class="hidden">
+    <h1 class="page-title">❤️ My Watchlist</h1>
+    <p class="meta">Your saved movies, all in one place.</p>
+    <div class="movie-grid" id="watchlistGrid"></div>
+  </div>
+
+  <div id="aboutPage" class="hidden">
+    <h1 class="page-title">About SHADOWFLIX</h1>
+    <p style="color:#c7c2d5;line-height:1.8">
+      SHADOWFLIX helps you discover movies, explore genres,
+      read descriptions, check ratings, watch official trailers
+      and find legal viewing options.
+    </p>
+    <p style="color:#aaa5bd;line-height:1.8">
+      Movie information and images are provided by TMDB.
+      This product uses the TMDB API but is not endorsed or
+      certified by TMDB.
+    </p>
+    <p style="color:#aaa5bd">
+      SHADOWFLIX does not host or distribute movies.
+    </p>
+  </div>
+</main>
+
+<footer>
+  <strong>SHADOWFLIX</strong><br>
+  Discover. Explore. Enjoy.<br>
+  Movie data provided by TMDB.
+</footer>
+
+<div class="modal" id="movieModal">
+  <div class="modal-box">
+    <button class="close" id="closeModal" aria-label="Close">×</button>
+    <div class="detail-content" id="detailContent"></div>
+  </div>
+</div>
+
+<script>
+/* ADD YOUR EXISTING TMDB V3 API KEY BELOW */
+const API_KEY = "c62372d2ec3bf2b8ea24a7ccc0b1f4d1";
+
+const BASE = "https://api.themoviedb.org/3";
+const IMG = "https://image.tmdb.org/t/p/";
+const IMAGE_FALLBACK =
+  "https://placehold.co/400x600/201c32/ffffff?text=No+Poster";
+
+let currentHeroMovie = null;
+let currentPage = 1;
+let currentSearch = "";
+let currentGenre = "";
+let currentMode = "popular";
+let selectedMovie = null;
+let genres = [];
+let watchlist = JSON.parse(localStorage.getItem("shadowflixWatchlist") || "[]");
+
+const $ = id => document.getElementById(id);
+
+async function api(path) {
+  if (API_KEY === "PASTE_YOUR_TMDB_V3_API_KEY_HERE") {
+    throw new Error("Please add your TMDB API key in the API_KEY line.");
+  }
+
+  const separator = path.includes("?") ? "&" : "?";
+  const response = await fetch(
+    BASE + path + separator + "api_key=" + encodeURIComponent(API_KEY)
+  );
+
+  if (!response.ok) {
+    throw new Error("TMDB request failed (" + response.status + ").");
+  }
+
+  return response.json();
+}
+
+function poster(path, size = "w342") {
+  return path ? IMG + size + path : IMAGE_FALLBACK;
+}
+
+function year(movie) {
+  const date = movie.release_date || movie.first_air_date || "";
+  return date ? date.slice(0,4) : "Unknown";
+}
+
+function escapeHTML(value = "") {
+  return String(value).replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  })[char]);
+}
+
+function movieCard(movie) {
+  const saved = watchlist.some(item => item.id === movie.id);
+
+  return `
+    <article class="movie-card">
+      <img class="poster"
+        src="${poster(movie.poster_path)}"
+        alt="${escapeHTML(movie.title || movie.name)} poster"
+        loading="lazy"
+        onerror="this.src='${IMAGE_FALLBACK}'">
+      <div class="card-info">
+        <h3>${escapeHTML(movie.title || movie.name || "Untitled")}</h3>
+        <div class="meta">
+          ${year(movie)} • ★ ${Number(movie.vote_average || 0).toFixed(1)}
+        </div>
+        <div class="card-actions">
+          <button onclick="showDetails(${movie.id})">View Details</button>
+          <button onclick="toggleWatchlist(${movie.id})">
+            ${saved ? "♥ Saved" : "+ Watchlist"}
+          </button>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+async function loadSection(endpoint, elementId) {
+  try {
+    const data = await api(endpoint);
+    $(elementId).innerHTML = data.results.map(movieCard).join("");
+    return data.results;
+  } catch (error) {
+    $(elementId).innerHTML =
+      `<p class="empty">${escapeHTML(error.message)}</p>`;
+    return [];
+  }
+}
+
+async function loadGenres() {
+  try {
+    const data = await api("/genre/movie/list?language=en-US");
+    genres = data.genres || [];
+
+    $("genreFilters").innerHTML =
+      `<button class="chip active" data-genre="">All genres</button>` +
+      genres.map(g =>
+        `<button class="chip" data-genre="${g.id}">${escapeHTML(g.name)}</button>`
+      ).join("");
+
+    document.querySelectorAll(".chip").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".chip").forEach(b => b.classList.remove("active"));
+        button.classList.add("active");
+        currentGenre = button.dataset.genre;
+        currentPage = 1;
+        currentSearch = "";
+        $("searchInput").value = "";
+        searchMovies();
+      });
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function loadHero() {
+  try {
+    const data = await api("/trending/movie/week?language=en-US");
+    const movie = data.results.find(item => item.backdrop_path) || data.results[0];
+
+    if (!movie) return;
+
+    currentHeroMovie = movie;
+    $("heroTitle").textContent = movie.title;
+    $("heroDescription").textContent =
+      movie.overview || "Discover your next favourite movie.";
+
+    $("heroImage").style.backgroundImage =
+      `url('${poster(movie.backdrop_path, "original")}')`;
+
+    $("heroDetails").onclick = () => showDetails(movie.id);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function loadCollections() {
+  await Promise.all([
+    loadSection("/trending/movie/week?language=en-US", "trendingGrid"),
+    loadSection("/movie/top_rated?language=en-US&page=1", "topGrid"),
+    loadSection("/movie/upcoming?language=en-US&page=1&region=KE", "upcomingGrid"),
+    loadSection("/movie/now_playing?language=en-US&page=1&region=KE", "playingGrid")
+  ]);
+}
+
+async function searchMovies() {
+  $("collections").classList.add("hidden");
+  $("resultsSection").classList.remove("hidden");
+
+  $("resultsTitle").textContent = currentSearch
+    ? "Search Results"
+    : currentGenre
+      ? (genres.find(g => String(g.id) === String(currentGenre))?.name || "Movies")
+      : "Popular Movies";
+
+  if (currentPage === 1) {
+    $("resultsGrid").innerHTML = `<p class="empty">Loading movies...</p>`;
+  }
+
+  let path;
+
+  if (currentSearch) {
+    path = `/search/movie?query=${encodeURIComponent(currentSearch)}&page=${currentPage}&include_adult=false`;
+  } else if (currentGenre) {
+    path = `/discover/movie?with_genres=${currentGenre}&page=${currentPage}&sort_by=popularity.desc&include_adult=false`;
+  } else {
+    path = `/movie/popular?page=${currentPage}&region=KE`;
+  }
+
+  try {
+    const data = await api(path);
+
+    if (currentPage === 1) {
+      $("resultsGrid").innerHTML = "";
+    }
+
+    if (!data.results.length && currentPage === 1) {
+      $("resultsGrid").innerHTML =
+        `<p class="empty">No movies found. Try another search.</p>`;
+    } else {
+      $("resultsGrid").insertAdjacentHTML(
+        "beforeend",
+        data.results.map(movieCard).join("")
+      );
+    }
+
+    $("loadMore").classList.toggle(
+      "hidden",
+      currentPage >= data.total_pages || !data.results.length
+    );
+  } catch (error) {
+    $("resultsGrid").innerHTML =
+      `<p class="empty">${escapeHTML(error.message)}</p>`;
+  }
+}
+
+function toggleWatchlist(id) {
+  const existing = watchlist.find(item => item.id === id);
+
+  if (existing) {
+    watchlist = watchlist.filter(item => item.id !== id);
+  } else {
+    const card = [...document.querySelectorAll(".movie-card")].find(
+      element => element.querySelector(`button[onclick="showDetails(${id})"]`)
+    );
+
+    if (selectedMovie && selectedMovie.id === id) {
+      watchlist.push(selectedMovie);
+    } else {
+      findMovie(id).then(movie => {
+        if (movie && !watchlist.some(item => item.id === id)) {
+          watchlist.push(movie);
+          saveWatchlist();
+          refreshVisibleMovies();
+        }
+      });
+      return;
+    }
+  }
+
+  saveWatchlist();
+  refreshVisibleMovies();
+}
+
+async function findMovie(id) {
+  try {
+    return await api(`/movie/${id}?language=en-US`);
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+function saveWatchlist() {
+  localStorage.setItem("shadowflixWatchlist", JSON.stringify(watchlist));
+}
+
+function refreshVisibleMovies() {
+  const grids = [
+    "trendingGrid","topGrid","upcomingGrid","playingGrid","resultsGrid"
+  ];
+
+  grids.forEach(id => {
+    const grid = $(id);
+    if (grid && grid.innerHTML.trim()) {
+      grid.querySelectorAll(".movie-card").forEach(card => {
+        const button = card.querySelector(".card-actions button:last-child");
+        const title = card.querySelector("h3")?.textContent;
+        const saved = watchlist.some(item =>
+          (item.title || item.name) === title
+        );
+        if (button) button.textContent = saved ? "♥ Saved" : "+ Watchlist";
+      });
+    }
+  });
+
+  if (!$("watchlistPage").classList.contains("hidden")) {
+    displayWatchlist();
+  }
+}
+
+function displayWatchlist() {
+  $("watchlistGrid").innerHTML = watchlist.length
+    ? watchlist.map(movieCard).join("")
+    : `<p class="empty">Your watchlist is empty. Save movies you want to discover later.</p>`;
+}
+
+function showPage(page) {
+  $("discoverPage").classList.toggle("hidden", page !== "discover");
+  $("watchlistPage").classList.toggle("hidden", page !== "watchlist");
+  $("aboutPage").classList.toggle("hidden", page !== "about");
+  $("hero").classList.toggle("hidden", page !== "discover");
+
+  document.querySelectorAll("nav button").forEach(button =>
+    button.classList.remove("active")
+  );
+
+  if (page === "discover") $("discoverNav").classList.add("active");
+  if (page === "watchlist") {
+    $("watchlistNav").classList.add("active");
+    displayWatchlist();
+  }
+  if (page === "about") $("aboutNav").classList.add("active");
+
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+async function showDetails(id) {
+  $("movieModal").classList.add("open");
+  $("detailContent").innerHTML = `<p class="empty">Loading movie details...</p>`;
+
+  try {
+    const [movie, providers, videos] = await Promise.all([
+      api(`/movie/${id}?language=en-US`),
+      api(`/movie/${id}/watch/providers`),
+      api(`/movie/${id}/videos?language=en-US`)
+    ]);
+
+    selectedMovie = movie;
+
+    const providerData = providers.results?.KE;
+    const providerGroups = providerData
+      ? ["flatrate","free","ads","rent","buy"].flatMap(type =>
+          (providerData[type] || []).map(provider => ({
+            ...provider,
+            type
+          }))
+        )
+      : [];
+
+    const providerNames = {
+      flatrate:"Subscription",
+      free:"Free",
+      ads:"Free with ads",
+      rent:"Rent",
+      buy:"Buy"
+    };
+
+    const providerHTML = providerGroups.length
+      ? `<div class="provider-list">${
+          providerGroups.map(p => `
+            <div class="provider">
+              <img src="${poster(p.logo_path,"w92")}" alt="">
+              <span>${escapeHTML(p.provider_name)} · ${providerNames[p.type]}</span>
+            </div>
+          `).join("")
+        }</div>
+        ${providerData.link ? `<p><a style="color:#c4a8ff" href="${escapeHTML(providerData.link)}" target="_blank" rel="noopener">See viewing options</a></p>` : ""}`
+      : `<p class="meta">No viewing options are currently listed for Kenya.</p>`;
+
+    const trailer = (videos.results || []).find(v =>
+      v.site === "YouTube" && v.type === "Trailer" && v.official
+    ) || (videos.results || []).find(v =>
+      v.site === "YouTube" && v.type === "Trailer"
+    );
+
+    $("detailContent").innerHTML = `
+      <div class="detail-top">
+        <img class="detail-poster"
+          src="${poster(movie.poster_path)}"
+          alt="${escapeHTML(movie.title)} poster">
+        <div>
+          <h2>${escapeHTML(movie.title)}</h2>
+          <div class="detail-meta">
+            Release: ${escapeHTML(movie.release_date || "Unknown")}<br>
+            Rating: ★ ${Number(movie.vote_average || 0).toFixed(1)}/10<br>
+            Genres: ${escapeHTML((movie.genres || []).map(g => g.name).join(", ") || "Unknown")}
+          </div>
+          <p>${escapeHTML(movie.overview || "No description available.")}</p>
+          <button class="primary" onclick="toggleWatchlist(${movie.id})">
+            ${watchlist.some(item => item.id === movie.id) ? "♥ Saved to Watchlist" : "+ Add to Watchlist"}
+          </button>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h3>Where to Watch in Kenya</h3>
+        ${providerHTML}
+      </div>
+
+      <div class="detail-section">
+        <h3>Official Trailer</h3>
+        ${trailer
+          ? `<iframe class="trailer-frame"
+              src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}"
+              title="Official movie trailer"
+              allowfullscreen
+              loading="lazy"></iframe>`
+          : `<p class="meta">No official trailer is currently listed.</p>`
+        }
+      </div>
+    `;
+  } catch (error) {
+    $("detailContent").innerHTML =
+      `<p class="empty">${escapeHTML(error.message)}</p>`;
+  }
+}
+
+function closeModal() {
+  $("movieModal").classList.remove("open");
+  $("detailContent").innerHTML = "";
+  selectedMovie = null;
+}
+
+$("discoverNav").addEventListener("click", () => showPage("discover"));
+$("watchlistNav").addEventListener("click", () => showPage("watchlist"));
+$("aboutNav").addEventListener("click", () => showPage("about"));
+
+$("heroExplore").addEventListener("click", () => {
+  $("collections").scrollIntoView({behavior:"smooth"});
+});
+
+$("searchButton").addEventListener("click", () => {
+  currentSearch = $("searchInput").value.trim();
+  currentGenre = "";
+  currentPage = 1;
+  document.querySelectorAll(".chip").forEach(b =>
+    b.classList.toggle("active", b.dataset.genre === "")
+  );
+  searchMovies();
+});
+
+$("searchInput").addEventListener("keydown", event => {
+  if (event.key === "Enter") $("searchButton").click();
+});
+
+$("loadMore").addEventListener("click", () => {
+  currentPage++;
+  searchMovies();
+});
+
+$("closeModal").addEventListener("click", closeModal);
+
+$("movieModal").addEventListener("click", event => {
+  if (event.target.id === "movieModal") closeModal();
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeModal();
+});
+
+async function startApp() {
+  $("resultsSection").classList.remove("hidden");
+  await Promise.all([
+    loadGenres(),
+    loadHero(),
+    loadCollections()
+  ]);
+  currentPage = 1;
+  await searchMovies();
+}
+
+startApp();
+</script>
+</body>
+</html>
