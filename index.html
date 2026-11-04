@@ -5,48 +5,36 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080711">
-<title>SHADOWFLIX 3.0 | Discover Movies</title>
+<title>SHADOWFLIX 4.0 | Discover Movies</title>
 
 <style>
 *{box-sizing:border-box}
 :root{
---bg:#080711;
---panel:#121020;
---panel2:#191629;
---purple:#8b5cf6;
---pink:#ec4899;
---muted:#aaa5bd;
---white:#fff;
+--bg:#080711;--panel:#121020;--panel2:#191629;
+--purple:#8b5cf6;--pink:#ec4899;
+--muted:#aaa5bd;--white:#fff;
 }
-body{
-margin:0;background:var(--bg);color:white;
-font-family:Arial,Helvetica,sans-serif;
-}
+body{margin:0;background:var(--bg);color:white;font-family:Arial,Helvetica,sans-serif}
 button,input,select{font:inherit}
 button{cursor:pointer}
 header{
-height:75px;padding:0 6%;
-display:flex;align-items:center;justify-content:space-between;
-background:#0d0b18;border-bottom:1px solid #ffffff12;
-position:sticky;top:0;z-index:10;
+min-height:75px;padding:12px 6%;display:flex;align-items:center;
+justify-content:space-between;gap:12px;background:#0d0b18;
+border-bottom:1px solid #ffffff12;position:sticky;top:0;z-index:10
 }
 .logo{font-size:25px;font-weight:900;letter-spacing:2px}
 .logo span{color:var(--purple)}
 nav{display:flex;gap:24px;align-items:center}
-nav button{
-background:none;border:0;color:#c9c4d7;font-weight:bold;
-}
+nav button{background:none;border:0;color:#c9c4d7;font-weight:bold}
 nav button.active,nav button:hover{color:#a78bfa}
 .profile-btn{
 border:1px solid #ffffff22;background:var(--panel2);
-color:white;border-radius:30px;padding:10px 15px;
+color:white;border-radius:30px;padding:10px 15px
 }
 .hero{
-min-height:440px;padding:70px 7%;
-display:flex;align-items:center;
+min-height:440px;padding:70px 7%;display:flex;align-items:center;
 background:linear-gradient(90deg,#080711 5%,#080711dd 42%,#08071130),
-linear-gradient(0deg,#080711,transparent 50%),
-url('') center/cover;
+linear-gradient(0deg,#080711,transparent 50%),url('') center/cover
 }
 .hero-content{max-width:570px}
 .eyebrow{color:#c4a5fd;font-weight:bold;letter-spacing:3px}
@@ -54,26 +42,17 @@ url('') center/cover;
 .hero p{color:#ddd9e7;line-height:1.7}
 .primary,.secondary{
 padding:13px 21px;border-radius:9px;border:0;
-font-weight:bold;margin:8px 8px 0 0;
+font-weight:bold;margin:8px 8px 0 0
 }
 .primary{background:linear-gradient(110deg,var(--purple),var(--pink));color:white}
 .secondary{background:#ffffff20;color:white;border:1px solid #ffffff30}
 main{padding:30px 6% 70px}
 .section{margin:35px 0}
-.section-head{
-display:flex;justify-content:space-between;
-align-items:center;gap:15px;margin-bottom:18px;
-}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:18px}
 .section h2{font-size:23px;margin:0}
 .muted{color:var(--muted)}
-.movie-grid{
-display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));
-gap:20px;
-}
-.movie-card{
-background:var(--panel);border-radius:12px;overflow:hidden;
-cursor:pointer;transition:.25s;position:relative;
-}
+.movie-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:20px}
+.movie-card{background:var(--panel);border-radius:12px;overflow:hidden;cursor:pointer;transition:.25s}
 .movie-card:hover{transform:translateY(-7px);box-shadow:0 12px 35px #0008}
 .movie-card img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block}
 .movie-info{padding:12px}
@@ -81,66 +60,38 @@ cursor:pointer;transition:.25s;position:relative;
 .movie-info p{font-size:12px;color:var(--muted);margin:0}
 .rating{color:#fbbf24}
 .search-area{display:flex;gap:10px;flex-wrap:wrap}
-.search-area input,.search-area select{
+.search-area input,.search-area select,.auth-input{
 background:var(--panel2);border:1px solid #ffffff20;
-color:white;border-radius:9px;padding:13px;min-width:180px;
+color:white;border-radius:9px;padding:13px;min-width:180px
 }
 .search-area input{flex:1}
 select option{background:#171426}
 .chips{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}
-.chip{
-border:1px solid #ffffff25;background:var(--panel);
-color:#ddd;padding:8px 14px;border-radius:30px;
-}
+.chip{border:1px solid #ffffff25;background:var(--panel);color:#ddd;padding:8px 14px;border-radius:30px}
 .chip.active{background:var(--purple);border-color:var(--purple)}
-.modal{
-display:none;position:fixed;inset:0;background:#000d;
-z-index:30;overflow-y:auto;padding:25px;
-}
-.modal-box{
-max-width:850px;margin:30px auto;background:#151222;
-border:1px solid #ffffff20;border-radius:16px;overflow:hidden;
-}
-.modal-top{
-min-height:260px;padding:35px;
-background:linear-gradient(90deg,#100d1c,transparent),
-linear-gradient(0deg,#151222,transparent),
-#242039;
-background-position:center;background-size:cover;
-}
+.modal{display:none;position:fixed;inset:0;background:#000d;z-index:30;overflow-y:auto;padding:25px}
+.modal-box{max-width:850px;margin:30px auto;background:#151222;border:1px solid #ffffff20;border-radius:16px;overflow:hidden}
+.modal-top{min-height:260px;padding:35px;background:linear-gradient(90deg,#100d1c,transparent),linear-gradient(0deg,#151222,transparent),#242039;background-position:center;background-size:cover}
 .modal-body{padding:25px}
-.close{
-float:right;background:#ffffff20;color:white;
-border:0;border-radius:50%;width:38px;height:38px;
-font-size:20px;
-}
+.close{float:right;background:#ffffff20;color:white;border:0;border-radius:50%;width:38px;height:38px;font-size:20px}
 .trailer{width:100%;aspect-ratio:16/9;border:0;border-radius:10px}
 .provider-list{display:flex;gap:10px;flex-wrap:wrap}
-.provider{
-background:var(--panel2);padding:10px 14px;
-border-radius:8px;color:#ddd;
-}
+.provider{background:var(--panel2);padding:10px 14px;border-radius:8px;color:#ddd}
 .profile-grid{display:flex;gap:15px;flex-wrap:wrap}
-.profile{
-background:var(--panel2);padding:20px;border-radius:12px;
-border:1px solid #ffffff20;min-width:130px;text-align:center;
-cursor:pointer;
-}
+.profile{background:var(--panel2);padding:20px;border-radius:12px;border:1px solid #ffffff20;min-width:130px;text-align:center;cursor:pointer}
 .profile .avatar{font-size:35px}
 .profile:hover{border-color:var(--purple)}
 .profile-form{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
-.profile-form input{
-padding:12px;background:var(--panel2);border:1px solid #ffffff25;
-color:white;border-radius:8px;
-}
-footer{
-border-top:1px solid #ffffff15;padding:30px 6%;
-text-align:center;color:var(--muted);font-size:13px;
-}
+.profile-form input{padding:12px;background:var(--panel2);border:1px solid #ffffff25;color:white;border-radius:8px}
+.auth-panel{margin-top:25px;padding:20px;background:var(--panel);border:1px solid #ffffff20;border-radius:12px}
+.auth-panel h3{margin-top:0}
+.auth-input{width:100%;margin:7px 0;min-width:0}
+.auth-message{font-size:13px;line-height:1.5;color:#c4b5fd;overflow-wrap:anywhere}
+footer{border-top:1px solid #ffffff15;padding:30px 6%;text-align:center;color:var(--muted);font-size:13px}
 .hidden{display:none!important}
 .empty{padding:35px;text-align:center;color:var(--muted)}
 @media(max-width:650px){
-header{padding:0 4%;height:auto;min-height:70px;flex-wrap:wrap;padding-top:12px;padding-bottom:12px}
+header{padding:12px 4%;flex-wrap:wrap}
 nav{order:3;width:100%;justify-content:space-between;padding-top:12px;gap:8px}
 nav button{font-size:12px}
 .hero{min-height:380px;padding:45px 6%}
@@ -178,17 +129,11 @@ main{padding:20px 4% 50px}
 
 <main>
 <div id="discoverPage">
-<div class="section" id="recommendationsSection">
-  <div class="section-head">
-    <h2>✨ Made For You</h2>
-    <span class="muted">Based on your watchlist</span>
-  </div>
-  <div class="movie-grid" id="recommendationsGrid">
-    <div class="empty">Add movies to your watchlist to get recommendations.</div>
-  </div>
+
+<div class="section">
+<div class="section-head">
+<h2>Discover Movies</h2>
 </div>
-  <div class="section">
-<div class="section-head"><h2>Discover Movies</h2></div>
 <div class="search-area">
 <input id="searchInput" placeholder="Search movies..." onkeydown="if(event.key==='Enter')searchMovies()">
 <select id="genreSelect" onchange="filterGenre()">
@@ -197,6 +142,16 @@ main{padding:20px 4% 50px}
 <button class="primary" onclick="searchMovies()">Search</button>
 </div>
 <div class="chips" id="genreChips"></div>
+</div>
+
+<div class="section" id="recommendationsSection">
+<div class="section-head">
+<h2>✨ Made For You</h2>
+<span class="muted">Based on your watchlist</span>
+</div>
+<div class="movie-grid" id="recommendationsGrid">
+<div class="empty">Add movies to your watchlist to get recommendations.</div>
+</div>
 </div>
 
 <div class="section">
@@ -227,7 +182,7 @@ main{padding:20px 4% 50px}
 
 <div id="watchlistPage" class="hidden">
 <div class="section-head"><h2>❤️ My Watchlist</h2></div>
-<p class="muted">Movies saved to your current profile.</p>
+<p class="muted" id="watchlistDescription">Your saved movies.</p>
 <div class="movie-grid" id="watchlistGrid"></div>
 </div>
 
@@ -238,7 +193,7 @@ main{padding:20px 4% 50px}
 <h3>Discover</h3>
 <p class="muted">Explore popular, trending and highly rated movies.</p>
 <h3>Personalize</h3>
-<p class="muted">Create local profiles and save movies to individual watchlists on this device.</p>
+<p class="muted">Registered users can access their online watchlists across devices.</p>
 <h3>Watch legally</h3>
 <p class="muted">SHADOWFLIX does not host or distribute movies. Availability depends on licensed streaming providers.</p>
 </div>
@@ -246,7 +201,7 @@ main{padding:20px 4% 50px}
 </main>
 
 <footer>
-SHADOWFLIX 3.0 · Discover. Explore. Enjoy.<br><br>
+SHADOWFLIX 4.0 · Discover. Explore. Enjoy.<br><br>
 Movie information provided by TMDB.
 </footer>
 
@@ -262,9 +217,7 @@ Movie information provided by TMDB.
 <button class="primary" id="watchlistButton" onclick="toggleCurrentMovie()">＋ Add to Watchlist</button>
 <div class="section">
 <h3>Where to watch in Kenya</h3>
-<div class="provider-list" id="providers">
-<p class="muted">Checking availability...</p>
-</div>
+<div class="provider-list" id="providers"><p class="muted">Checking availability...</p></div>
 <p class="muted" id="providerNote"></p>
 </div>
 <div class="section">
@@ -283,33 +236,99 @@ Movie information provided by TMDB.
 <div class="modal-box">
 <div class="modal-body">
 <button class="close" onclick="closeProfiles()">×</button>
-<h2>Who's watching?</h2>
-<p class="muted">Choose a profile or create a new one.</p>
+<h2>SHADOWFLIX Account</h2>
+<p class="muted">Register or sign in to keep your watchlist online.</p>
+
+<div id="signedOutArea">
+<input class="auth-input" id="authEmail" type="email" placeholder="Email address" autocomplete="email">
+<input class="auth-input" id="authPassword" type="password" placeholder="Password (at least 8 characters)" autocomplete="current-password">
+<button class="primary" onclick="signUp()">Create account</button>
+<button class="secondary" onclick="signIn()">Log in</button>
+<p class="auth-message" id="authMessage">Email confirmation may be required when creating an account.</p>
+</div>
+
+<div id="signedInArea" class="hidden">
+<h3>You're signed in</h3>
+<p class="muted" id="accountEmail"></p>
+<p class="auth-message">Your watchlist is connected to your account.</p>
+<button class="primary" onclick="signOut()">Log out</button>
+</div>
+
+<div class="section">
+<h3>Local profiles</h3>
+<p class="muted">These older profiles remain saved in this browser. Sign in above to use an online watchlist.</p>
 <div class="profile-grid" id="profileGrid"></div>
 <div class="profile-form">
 <input id="newProfileName" placeholder="Profile name" maxlength="20">
 <button class="primary" onclick="createProfile()">Create profile</button>
 </div>
-<p class="muted">Profiles are saved only in this browser on this device.</p>
+</div>
 </div>
 </div>
 </div>
 
+<!-- Supabase library -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-const API_KEY = "c62372d2ec3bf2b8ea24a7ccc0b1f4d1";
+// --------------------------------------------------
+// 1. ADD YOUR OWN KEYS HERE
+// --------------------------------------------------
+
+const TMDB_API_KEY = "752ef8e58948b74868e4e051bafa846e";
+
+const SUPABASE_URL = "https://yszdkqfuuarkyhdzsgbx.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_d589oEgmtS4H0X85w8LCXQ_eOhLIm3T";
+
+const SITE_URL = "https://adudajohnson-bot.github.io/SHADOWFLIX/";
+
 const BASE = "https://api.themoviedb.org/3";
 const IMG = "https://image.tmdb.org/t/p/";
+
+let supabaseClient = null;
+let currentUser = null;
+let cloudWatchlist = [];
 let currentMovie = null;
 let heroMovie = null;
 let genres = [];
 let currentPage = "discover";
 
-function api(path){
-if(API_KEY === "PASTE_YOUR_TMDB_V3_API_KEY_HERE"){
-throw new Error("Add your TMDB API key in the code first.");
+// --------------------------------------------------
+// 2. CONNECT TO SUPABASE
+// --------------------------------------------------
+
+function initializeSupabase(){
+if(!window.supabase){
+throw new Error("Supabase library did not load. Refresh the page.");
 }
-return fetch(BASE + path + (path.includes("?") ? "&" : "?") + "api_key=" + API_KEY)
-.then(r=>{
+
+if(
+SUPABASE_URL.includes("PASTE_") ||
+SUPABASE_PUBLISHABLE_KEY.includes("PASTE_")
+){
+throw new Error("Add your Supabase Project URL and Publishable key first.");
+}
+
+supabaseClient = window.supabase.createClient(
+SUPABASE_URL,
+SUPABASE_PUBLISHABLE_KEY
+);
+}
+
+// --------------------------------------------------
+// 3. TMDB API
+// --------------------------------------------------
+
+function api(path){
+if(TMDB_API_KEY.includes("PASTE_")){
+throw new Error("Add your new TMDB API key in the code first.");
+}
+
+return fetch(
+BASE + path +
+(path.includes("?") ? "&" : "?") +
+"api_key=" + encodeURIComponent(TMDB_API_KEY)
+).then(r=>{
 if(!r.ok)throw new Error("TMDB request failed: "+r.status);
 return r.json();
 });
@@ -319,10 +338,16 @@ function poster(path){
 return path ? IMG+"w500"+path : "";
 }
 
+function escapeHTML(value){
+return String(value).replace(/[&<>"']/g,c=>({
+"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[c]));
+}
+
 function movieCard(movie){
-const image = poster(movie.poster_path);
+const image=poster(movie.poster_path);
 return `
-<div class="movie-card" onclick="showDetails(${movie.id})">
+<div class="movie-card" onclick="showDetails(${Number(movie.id)})">
 <img src="${image}" alt="${escapeHTML(movie.title || "Movie poster")}" loading="lazy"
 onerror="this.style.background='#252039';this.alt='Poster unavailable'">
 <div class="movie-info">
@@ -333,24 +358,24 @@ onerror="this.style.background='#252039';this.alt='Poster unavailable'">
 </div>`;
 }
 
-function escapeHTML(value){
-return String(value).replace(/[&<>"']/g, c=>({
-"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-}[c]));
-}
-
 function displayMovies(id,movies){
-document.getElementById(id).innerHTML = movies.length
+document.getElementById(id).innerHTML=movies.length
 ? movies.map(movieCard).join("")
 : '<div class="empty">No movies found.</div>';
 }
 
+// --------------------------------------------------
+// 4. MOVIE DISCOVERY
+// --------------------------------------------------
+
 async function loadGenres(){
 const data=await api("/genre/movie/list");
 genres=data.genres || [];
+
 document.getElementById("genreSelect").innerHTML=
 '<option value="">All genres</option>'+
 genres.map(g=>`<option value="${g.id}">${escapeHTML(g.name)}</option>`).join("");
+
 document.getElementById("genreChips").innerHTML=
 genres.slice(0,12).map(g=>
 `<button class="chip" onclick="chooseGenre(${g.id},this)">${escapeHTML(g.name)}</button>`
@@ -361,10 +386,12 @@ async function loadHero(){
 const data=await api("/trending/movie/week");
 heroMovie=data.results?.[0];
 if(!heroMovie)return;
-const backdrop=heroMovie.backdrop_path
-? IMG+"original"+heroMovie.backdrop_path : "";
+
+const backdrop=heroMovie.backdrop_path ? IMG+"original"+heroMovie.backdrop_path : "";
+
 document.getElementById("hero").style.backgroundImage=
 `linear-gradient(90deg,#080711 5%,#080711dd 42%,#08071130),linear-gradient(0deg,#080711,transparent 50%),url('${backdrop}')`;
+
 document.getElementById("heroTitle").textContent=heroMovie.title;
 document.getElementById("heroDescription").textContent=heroMovie.overview || "Explore this trending movie.";
 }
@@ -380,6 +407,7 @@ api("/movie/top_rated"),
 api("/movie/popular"),
 api("/movie/upcoming")
 ]);
+
 displayMovies("trendingGrid",trending.results || []);
 displayMovies("topGrid",top.results || []);
 displayMovies("popularGrid",popular.results || []);
@@ -387,9 +415,11 @@ displayMovies("upcomingGrid",upcoming.results || []);
 }
 
 async function searchMovies(){
+try{
 const query=document.getElementById("searchInput").value.trim();
 const genre=document.getElementById("genreSelect").value;
 let data;
+
 if(query){
 data=await api("/search/movie?query="+encodeURIComponent(query));
 }else if(genre){
@@ -397,11 +427,16 @@ data=await api("/discover/movie?with_genres="+genre+"&sort_by=popularity.desc");
 }else{
 data=await api("/movie/popular");
 }
+
 document.getElementById("searchSection").classList.remove("hidden");
 document.getElementById("searchHeading").textContent=
 query ? "Results for: "+query : "Filtered Movies";
+
 displayMovies("searchGrid",data.results || []);
 document.getElementById("searchSection").scrollIntoView({behavior:"smooth"});
+}catch(error){
+alert(error.message);
+}
 }
 
 function chooseGenre(id,button){
@@ -415,6 +450,10 @@ function filterGenre(){
 searchMovies();
 }
 
+// --------------------------------------------------
+// 5. MOVIE DETAILS, PROVIDERS AND TRAILERS
+// --------------------------------------------------
+
 async function showDetails(id){
 try{
 const [movie,videos,providers,similar]=await Promise.all([
@@ -423,27 +462,44 @@ api("/movie/"+id+"/videos"),
 api("/movie/"+id+"/watch/providers"),
 api("/movie/"+id+"/similar")
 ]);
+
 currentMovie=movie;
+
 document.getElementById("modalTitle").textContent=movie.title;
 document.getElementById("modalMeta").textContent=
 (movie.release_date || "Release date unknown").slice(0,4)+
 " · ★ "+Number(movie.vote_average || 0).toFixed(1)+
 " · "+(movie.runtime ? movie.runtime+" minutes" : "Runtime unavailable");
+
 document.getElementById("modalOverview").textContent=movie.overview || "No description available.";
+
 document.getElementById("modalTop").style.backgroundImage=
 `linear-gradient(90deg,#100d1cdd,transparent),linear-gradient(0deg,#151222,transparent),url('${movie.backdrop_path ? IMG+"w1280"+movie.backdrop_path : ""}')`;
+
 updateWatchlistButton();
 
 const kenya=providers.results?.KE;
 const providerBox=document.getElementById("providers");
 const providerNote=document.getElementById("providerNote");
+
 if(kenya){
-let all=[...(kenya.flatrate || []),...(kenya.free || []),...(kenya.ads || []),...(kenya.rent || []),...(kenya.buy || [])];
-let unique=[...new Map(all.map(p=>[p.provider_id,p])).values()];
+const all=[
+...(kenya.flatrate || []),
+...(kenya.free || []),
+...(kenya.ads || []),
+...(kenya.rent || []),
+...(kenya.buy || [])
+];
+
+const unique=[...new Map(all.map(p=>[p.provider_id,p])).values()];
+
 providerBox.innerHTML=unique.length
 ? unique.map(p=>`<span class="provider">${escapeHTML(p.provider_name)}</span>`).join("")
 : "No provider listings currently available.";
-providerNote.innerHTML=`<a style="color:#c4b5fd" target="_blank" rel="noopener" href="${kenya.link}">View availability details</a>`;
+
+providerNote.innerHTML=kenya.link
+? `<a style="color:#c4b5fd" target="_blank" rel="noopener" href="${escapeHTML(kenya.link)}">View availability details</a>`
+: "";
 }else{
 providerBox.textContent="No Kenya provider information is currently listed.";
 providerNote.textContent="Availability can change. Check licensed streaming services directly.";
@@ -451,12 +507,14 @@ providerNote.textContent="Availability can change. Check licensed streaming serv
 
 const trailer=videos.results?.find(v=>v.site==="YouTube" && v.type==="Trailer" && v.official)
 || videos.results?.find(v=>v.site==="YouTube" && v.type==="Trailer");
+
 document.getElementById("trailerArea").innerHTML=trailer
 ? `<iframe class="trailer" src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}" title="Official movie trailer" allowfullscreen loading="lazy"></iframe>`
 : "No official trailer is currently available.";
 
 displayMovies("similarGrid",(similar.results || []).slice(0,6));
 document.getElementById("movieModal").style.display="block";
+
 }catch(error){
 alert(error.message);
 }
@@ -465,6 +523,10 @@ alert(error.message);
 function closeModal(){
 document.getElementById("movieModal").style.display="none";
 }
+
+// --------------------------------------------------
+// 6. LOCAL PROFILES
+// --------------------------------------------------
 
 function getProfiles(){
 return JSON.parse(localStorage.getItem("sf_profiles") || "[]");
@@ -478,75 +540,297 @@ function getActiveProfile(){
 return localStorage.getItem("sf_active_profile") || "";
 }
 
-function profileWatchlist(){
-const profile=getActiveProfile();
-return JSON.parse(localStorage.getItem("sf_watchlist_"+profile) || "[]");
+function localWatchlist(){
+return JSON.parse(localStorage.getItem("sf_watchlist_"+getActiveProfile()) || "[]");
 }
 
-function saveWatchlist(list){
+// If signed in, use the online watchlist.
+// Otherwise, use the existing local watchlist.
+function profileWatchlist(){
+return currentUser ? cloudWatchlist : localWatchlist();
+}
+
+function saveLocalWatchlist(list){
 localStorage.setItem("sf_watchlist_"+getActiveProfile(),JSON.stringify(list));
 }
 
-function updateWatchlistButton(){
-if(!currentMovie)return;
-const saved=profileWatchlist().some(m=>m.id===currentMovie.id);
-document.getElementById("watchlistButton").textContent=
-saved ? "✓ Remove from Watchlist" : "＋ Add to Watchlist";
+// --------------------------------------------------
+// 7. ONLINE WATCHLIST
+// --------------------------------------------------
+
+async function loadCloudWatchlist(){
+if(!currentUser){
+cloudWatchlist=[];
+return;
 }
 
-function toggleCurrentMovie(){
+const {data,error}=await supabaseClient
+.from("watchlists")
+.select("movie_id,movie_title,poster_path")
+.order("created_at",{ascending:true});
+
+if(error){
+console.error("Watchlist loading error:",error.message);
+throw error;
+}
+
+cloudWatchlist=(data || []).map(item=>({
+id:item.movie_id,
+title:item.movie_title,
+poster_path:item.poster_path,
+vote_average:0
+}));
+}
+
+async function toggleCurrentMovie(){
 if(!currentMovie)return;
-let list=profileWatchlist();
+
+const button=document.getElementById("watchlistButton");
+button.disabled=true;
+
+try{
+if(currentUser){
+const existing=cloudWatchlist.some(m=>m.id===currentMovie.id);
+
+if(existing){
+const {error}=await supabaseClient
+.from("watchlists")
+.delete()
+.eq("user_id",currentUser.id)
+.eq("movie_id",currentMovie.id);
+
+if(error)throw error;
+
+}else{
+const {error}=await supabaseClient
+.from("watchlists")
+.insert({
+user_id:currentUser.id,
+movie_id:currentMovie.id,
+movie_title:currentMovie.title,
+poster_path:currentMovie.poster_path
+});
+
+if(error)throw error;
+}
+
+await loadCloudWatchlist();
+
+}else{
+let list=localWatchlist();
+
 if(list.some(m=>m.id===currentMovie.id)){
 list=list.filter(m=>m.id!==currentMovie.id);
 }else{
 list.push(currentMovie);
 }
-saveWatchlist(list);
+
+saveLocalWatchlist(list);
+}
+
 updateWatchlistButton();
 renderWatchlist();
+
+}catch(error){
+alert("Could not update your watchlist: "+error.message);
+}finally{
+button.disabled=false;
 }
+}
+
+function updateWatchlistButton(){
+if(!currentMovie)return;
+
+const saved=profileWatchlist().some(m=>m.id===currentMovie.id);
+
+document.getElementById("watchlistButton").textContent=
+saved ? "✓ Remove from Watchlist" : "＋ Add to Watchlist";
+}
+
 async function loadRecommendations(){
-  const grid = document.getElementById("recommendationsGrid");
-  const saved = profileWatchlist();
+const grid=document.getElementById("recommendationsGrid");
+const saved=profileWatchlist();
 
-  if(!saved.length){
-    grid.innerHTML = '<div class="empty">Add movies to your watchlist to get recommendations.</div>';
-    return;
-  }
-
-  grid.innerHTML = '<div class="empty">Finding movies you might enjoy...</div>';
-
-  try{
-    const recent = saved.slice(-3);
-
-    const results = await Promise.all(
-      recent.map(movie => api("/movie/" + movie.id + "/similar"))
-    );
-
-    const savedIds = new Set(saved.map(movie => movie.id));
-    const recommendations = results
-      .flatMap(result => result.results || [])
-      .filter(movie => !savedIds.has(movie.id));
-
-    const unique = [...new Map(
-      recommendations.map(movie => [movie.id, movie])
-    ).values()];
-
-    displayMovies("recommendationsGrid", unique.slice(0,12));
-
-  }catch(error){
-    grid.innerHTML = '<div class="empty">Could not load recommendations. Please try again.</div>';
-  }
+if(!saved.length){
+grid.innerHTML='<div class="empty">Add movies to your watchlist to get recommendations.</div>';
+return;
 }
+
+grid.innerHTML='<div class="empty">Finding movies you might enjoy...</div>';
+
+try{
+const recent=saved.slice(-3);
+
+const results=await Promise.all(
+recent.map(movie=>api("/movie/"+movie.id+"/similar"))
+);
+
+const savedIds=new Set(saved.map(movie=>movie.id));
+
+const recommendations=results
+.flatMap(result=>result.results || [])
+.filter(movie=>!savedIds.has(movie.id));
+
+const unique=[...new Map(
+recommendations.map(movie=>[movie.id,movie])
+).values()];
+
+displayMovies("recommendationsGrid",unique.slice(0,12));
+
+}catch(error){
+grid.innerHTML='<div class="empty">Could not load recommendations. Please try again.</div>';
+}
+}
+
 function renderWatchlist(){
 const list=profileWatchlist();
 displayMovies("watchlistGrid",list);
-loadRecommendations();  
+
+document.getElementById("watchlistDescription").textContent=
+currentUser
+? "Your online watchlist, saved to your account."
+: "Your local watchlist, saved in this browser.";
+
+loadRecommendations();
 }
+
+// --------------------------------------------------
+// 8. ACCOUNT REGISTRATION AND LOGIN
+// --------------------------------------------------
+
+function showAuthMessage(message){
+document.getElementById("authMessage").textContent=message;
+}
+
+async function signUp(){
+const email=document.getElementById("authEmail").value.trim();
+const password=document.getElementById("authPassword").value;
+
+if(!email || !password){
+showAuthMessage("Enter your email address and password.");
+return;
+}
+
+if(password.length<8){
+showAuthMessage("Your password must be at least 8 characters.");
+return;
+}
+
+showAuthMessage("Creating your account...");
+
+try{
+const {data,error}=await supabaseClient.auth.signUp({
+email,
+password,
+options:{emailRedirectTo:SITE_URL}
+});
+
+if(error)throw error;
+
+if(data.session){
+showAuthMessage("Account created. You are signed in.");
+}else{
+showAuthMessage("Account created! Check your email for a confirmation link before logging in.");
+}
+
+}catch(error){
+showAuthMessage(error.message);
+}
+}
+
+async function signIn(){
+const email=document.getElementById("authEmail").value.trim();
+const password=document.getElementById("authPassword").value;
+
+if(!email || !password){
+showAuthMessage("Enter your email address and password.");
+return;
+}
+
+showAuthMessage("Signing in...");
+
+try{
+const {error}=await supabaseClient.auth.signInWithPassword({
+email,
+password
+});
+
+if(error)throw error;
+
+showAuthMessage("Login successful!");
+
+}catch(error){
+showAuthMessage(error.message);
+}
+}
+
+async function signOut(){
+const {error}=await supabaseClient.auth.signOut();
+
+if(error){
+alert("Could not log out: "+error.message);
+return;
+}
+
+currentUser=null;
+cloudWatchlist=[];
+updateAccountDisplay();
+renderWatchlist();
+updateWatchlistButton();
+}
+
+function updateAccountDisplay(){
+const signedOut=document.getElementById("signedOutArea");
+const signedIn=document.getElementById("signedInArea");
+
+if(currentUser){
+signedOut.classList.add("hidden");
+signedIn.classList.remove("hidden");
+
+document.getElementById("accountEmail").textContent=currentUser.email || "Signed in";
+document.getElementById("profileName").textContent=
+currentUser.email ? currentUser.email.split("@")[0] : "Account";
+
+}else{
+signedIn.classList.add("hidden");
+signedOut.classList.remove("hidden");
+document.getElementById("profileName").textContent="Guest";
+}
+}
+
+async function initializeAuth(){
+const {data,error}=await supabaseClient.auth.getSession();
+
+if(error)throw error;
+
+currentUser=data.session?.user || null;
+
+if(currentUser){
+await loadCloudWatchlist();
+}
+
+updateAccountDisplay();
+
+supabaseClient.auth.onAuthStateChange((event,session)=>{
+currentUser=session?.user || null;
+
+loadCloudWatchlist().then(()=>{
+updateAccountDisplay();
+renderWatchlist();
+updateWatchlistButton();
+}).catch(error=>{
+console.error("Account watchlist error:",error.message);
+});
+});
+}
+
+// --------------------------------------------------
+// 9. PROFILE WINDOW
+// --------------------------------------------------
 
 function openProfiles(){
 renderProfiles();
+updateAccountDisplay();
 document.getElementById("profileModal").style.display="block";
 }
 
@@ -556,6 +840,7 @@ document.getElementById("profileModal").style.display="none";
 
 function renderProfiles(){
 const profiles=getProfiles();
+
 document.getElementById("profileGrid").innerHTML=profiles.length
 ? profiles.map(p=>`
 <div class="profile" onclick="selectProfile('${p.id}')">
@@ -563,56 +848,103 @@ document.getElementById("profileGrid").innerHTML=profiles.length
 <strong>${escapeHTML(p.name)}</strong>
 ${p.id===getActiveProfile() ? '<p class="muted">Current profile</p>' : ''}
 </div>`).join("")
-: '<p class="muted">No profiles yet. Create your first profile below.</p>';
+: '<p class="muted">No local profiles yet.</p>';
 }
 
 function createProfile(){
 const name=document.getElementById("newProfileName").value.trim();
-if(!name){alert("Enter a profile name first.");return;}
+
+if(!name){
+alert("Enter a profile name first.");
+return;
+}
+
 const profiles=getProfiles();
-if(profiles.length>=5){alert("You can create up to 5 profiles.");return;}
+
+if(profiles.length>=5){
+alert("You can create up to 5 profiles.");
+return;
+}
+
 const id="profile_"+Date.now();
 profiles.push({id,name});
 saveProfiles(profiles);
+
 document.getElementById("newProfileName").value="";
 selectProfile(id);
 }
 
 function selectProfile(id){
 localStorage.setItem("sf_active_profile",id);
+
 const profile=getProfiles().find(p=>p.id===id);
+
+if(!currentUser){
 document.getElementById("profileName").textContent=profile?.name || "Guest";
+}
+
 closeProfiles();
+renderProfiles();
 renderWatchlist();
 updateWatchlistButton();
 }
 
+// --------------------------------------------------
+// 10. PAGE NAVIGATION
+// --------------------------------------------------
+
 function showPage(page,button){
 currentPage=page;
+
 ["discover","watchlist","about"].forEach(p=>{
 document.getElementById(p+"Page").classList.toggle("hidden",p!==page);
 });
+
 document.getElementById("searchSection").classList.add("hidden");
+
 document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+
 if(button)button.classList.add("active");
+
 if(page==="watchlist")renderWatchlist();
+
 window.scrollTo({top:0,behavior:"smooth"});
 }
 
+// --------------------------------------------------
+// 11. START THE APP
+// --------------------------------------------------
+
 async function startApp(){
 try{
+initializeSupabase();
+await initializeAuth();
+
 const profiles=getProfiles();
+
 if(!profiles.length){
 const id="profile_"+Date.now();
 saveProfiles([{id,name:"My Profile"}]);
 localStorage.setItem("sf_active_profile",id);
 }
+
 const active=getProfiles().find(p=>p.id===getActiveProfile()) || getProfiles()[0];
-selectProfile(active.id);
+
+if(!getActiveProfile()){
+localStorage.setItem("sf_active_profile",active.id);
+}
+
+if(!currentUser){
+document.getElementById("profileName").textContent=active.name;
+}
+
 await loadGenres();
 await Promise.all([loadHero(),loadCollections()]);
-await loadRecommendations();  
+renderWatchlist();
+
 }catch(error){
+console.error(error);
+
 document.getElementById("trendingGrid").innerHTML=
 `<div class="empty">${escapeHTML(error.message)}</div>`;
 }
@@ -627,5 +959,6 @@ closeProfiles();
 
 startApp();
 </script>
+
 </body>
 </html>
