@@ -1,0 +1,588 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080711">
+<title>SHADOWFLIX 3.0 | Discover Movies</title>
+
+<style>
+*{box-sizing:border-box}
+:root{
+--bg:#080711;
+--panel:#121020;
+--panel2:#191629;
+--purple:#8b5cf6;
+--pink:#ec4899;
+--muted:#aaa5bd;
+--white:#fff;
+}
+body{
+margin:0;background:var(--bg);color:white;
+font-family:Arial,Helvetica,sans-serif;
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+header{
+height:75px;padding:0 6%;
+display:flex;align-items:center;justify-content:space-between;
+background:#0d0b18;border-bottom:1px solid #ffffff12;
+position:sticky;top:0;z-index:10;
+}
+.logo{font-size:25px;font-weight:900;letter-spacing:2px}
+.logo span{color:var(--purple)}
+nav{display:flex;gap:24px;align-items:center}
+nav button{
+background:none;border:0;color:#c9c4d7;font-weight:bold;
+}
+nav button.active,nav button:hover{color:#a78bfa}
+.profile-btn{
+border:1px solid #ffffff22;background:var(--panel2);
+color:white;border-radius:30px;padding:10px 15px;
+}
+.hero{
+min-height:440px;padding:70px 7%;
+display:flex;align-items:center;
+background:linear-gradient(90deg,#080711 5%,#080711dd 42%,#08071130),
+linear-gradient(0deg,#080711,transparent 50%),
+url('') center/cover;
+}
+.hero-content{max-width:570px}
+.eyebrow{color:#c4a5fd;font-weight:bold;letter-spacing:3px}
+.hero h1{font-size:clamp(38px,6vw,66px);margin:15px 0}
+.hero p{color:#ddd9e7;line-height:1.7}
+.primary,.secondary{
+padding:13px 21px;border-radius:9px;border:0;
+font-weight:bold;margin:8px 8px 0 0;
+}
+.primary{background:linear-gradient(110deg,var(--purple),var(--pink));color:white}
+.secondary{background:#ffffff20;color:white;border:1px solid #ffffff30}
+main{padding:30px 6% 70px}
+.section{margin:35px 0}
+.section-head{
+display:flex;justify-content:space-between;
+align-items:center;gap:15px;margin-bottom:18px;
+}
+.section h2{font-size:23px;margin:0}
+.muted{color:var(--muted)}
+.movie-grid{
+display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));
+gap:20px;
+}
+.movie-card{
+background:var(--panel);border-radius:12px;overflow:hidden;
+cursor:pointer;transition:.25s;position:relative;
+}
+.movie-card:hover{transform:translateY(-7px);box-shadow:0 12px 35px #0008}
+.movie-card img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block}
+.movie-info{padding:12px}
+.movie-info h3{font-size:14px;margin:0 0 8px}
+.movie-info p{font-size:12px;color:var(--muted);margin:0}
+.rating{color:#fbbf24}
+.search-area{display:flex;gap:10px;flex-wrap:wrap}
+.search-area input,.search-area select{
+background:var(--panel2);border:1px solid #ffffff20;
+color:white;border-radius:9px;padding:13px;min-width:180px;
+}
+.search-area input{flex:1}
+select option{background:#171426}
+.chips{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}
+.chip{
+border:1px solid #ffffff25;background:var(--panel);
+color:#ddd;padding:8px 14px;border-radius:30px;
+}
+.chip.active{background:var(--purple);border-color:var(--purple)}
+.modal{
+display:none;position:fixed;inset:0;background:#000d;
+z-index:30;overflow-y:auto;padding:25px;
+}
+.modal-box{
+max-width:850px;margin:30px auto;background:#151222;
+border:1px solid #ffffff20;border-radius:16px;overflow:hidden;
+}
+.modal-top{
+min-height:260px;padding:35px;
+background:linear-gradient(90deg,#100d1c,transparent),
+linear-gradient(0deg,#151222,transparent),
+#242039;
+background-position:center;background-size:cover;
+}
+.modal-body{padding:25px}
+.close{
+float:right;background:#ffffff20;color:white;
+border:0;border-radius:50%;width:38px;height:38px;
+font-size:20px;
+}
+.trailer{width:100%;aspect-ratio:16/9;border:0;border-radius:10px}
+.provider-list{display:flex;gap:10px;flex-wrap:wrap}
+.provider{
+background:var(--panel2);padding:10px 14px;
+border-radius:8px;color:#ddd;
+}
+.profile-grid{display:flex;gap:15px;flex-wrap:wrap}
+.profile{
+background:var(--panel2);padding:20px;border-radius:12px;
+border:1px solid #ffffff20;min-width:130px;text-align:center;
+cursor:pointer;
+}
+.profile .avatar{font-size:35px}
+.profile:hover{border-color:var(--purple)}
+.profile-form{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.profile-form input{
+padding:12px;background:var(--panel2);border:1px solid #ffffff25;
+color:white;border-radius:8px;
+}
+footer{
+border-top:1px solid #ffffff15;padding:30px 6%;
+text-align:center;color:var(--muted);font-size:13px;
+}
+.hidden{display:none!important}
+.empty{padding:35px;text-align:center;color:var(--muted)}
+@media(max-width:650px){
+header{padding:0 4%;height:auto;min-height:70px;flex-wrap:wrap;padding-top:12px;padding-bottom:12px}
+nav{order:3;width:100%;justify-content:space-between;padding-top:12px;gap:8px}
+nav button{font-size:12px}
+.hero{min-height:380px;padding:45px 6%}
+main{padding:20px 4% 50px}
+.movie-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.movie-info{padding:9px}
+.modal{padding:8px}
+.modal-box{margin:12px auto}
+.modal-top{padding:20px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="logo">SHADOW<span>FLIX</span></div>
+<nav>
+<button class="active" onclick="showPage('discover',this)">Discover</button>
+<button onclick="showPage('watchlist',this)">My Watchlist</button>
+<button onclick="showPage('about',this)">About</button>
+</nav>
+<button class="profile-btn" onclick="openProfiles()">👤 <span id="profileName">Guest</span></button>
+</header>
+
+<section class="hero" id="hero">
+<div class="hero-content">
+<div class="eyebrow">YOUR NEXT MOVIE STARTS HERE</div>
+<h1 id="heroTitle">Discover your next favourite.</h1>
+<p id="heroDescription">Explore trending movies, discover new favourites and find where to watch.</p>
+<button class="primary" onclick="openHeroMovie()">Explore movie</button>
+<button class="secondary" onclick="showPage('discover')">Discover movies</button>
+</div>
+</section>
+
+<main>
+<div id="discoverPage">
+<div class="section">
+<div class="section-head"><h2>Discover Movies</h2></div>
+<div class="search-area">
+<input id="searchInput" placeholder="Search movies..." onkeydown="if(event.key==='Enter')searchMovies()">
+<select id="genreSelect" onchange="filterGenre()">
+<option value="">All genres</option>
+</select>
+<button class="primary" onclick="searchMovies()">Search</button>
+</div>
+<div class="chips" id="genreChips"></div>
+</div>
+
+<div class="section">
+<div class="section-head"><h2>🔥 Trending Movies</h2></div>
+<div class="movie-grid" id="trendingGrid"></div>
+</div>
+
+<div class="section">
+<div class="section-head"><h2>⭐ Top Rated</h2></div>
+<div class="movie-grid" id="topGrid"></div>
+</div>
+
+<div class="section">
+<div class="section-head"><h2>🎬 Popular Movies</h2></div>
+<div class="movie-grid" id="popularGrid"></div>
+</div>
+
+<div class="section">
+<div class="section-head"><h2>🚀 Upcoming Movies</h2></div>
+<div class="movie-grid" id="upcomingGrid"></div>
+</div>
+
+<div class="section hidden" id="searchSection">
+<div class="section-head"><h2 id="searchHeading">Search Results</h2></div>
+<div class="movie-grid" id="searchGrid"></div>
+</div>
+</div>
+
+<div id="watchlistPage" class="hidden">
+<div class="section-head"><h2>❤️ My Watchlist</h2></div>
+<p class="muted">Movies saved to your current profile.</p>
+<div class="movie-grid" id="watchlistGrid"></div>
+</div>
+
+<div id="aboutPage" class="hidden">
+<div class="section">
+<h2>About SHADOWFLIX</h2>
+<p class="muted">SHADOWFLIX helps you discover movies, explore ratings, watch official trailers and find legal places to watch.</p>
+<h3>Discover</h3>
+<p class="muted">Explore popular, trending and highly rated movies.</p>
+<h3>Personalize</h3>
+<p class="muted">Create local profiles and save movies to individual watchlists on this device.</p>
+<h3>Watch legally</h3>
+<p class="muted">SHADOWFLIX does not host or distribute movies. Availability depends on licensed streaming providers.</p>
+</div>
+</div>
+</main>
+
+<footer>
+SHADOWFLIX 3.0 · Discover. Explore. Enjoy.<br><br>
+Movie information provided by TMDB.
+</footer>
+
+<div class="modal" id="movieModal" onclick="if(event.target===this)closeModal()">
+<div class="modal-box">
+<div class="modal-top" id="modalTop">
+<button class="close" onclick="closeModal()">×</button>
+<h1 id="modalTitle">Movie title</h1>
+<p id="modalMeta"></p>
+</div>
+<div class="modal-body">
+<p id="modalOverview" class="muted"></p>
+<button class="primary" id="watchlistButton" onclick="toggleCurrentMovie()">＋ Add to Watchlist</button>
+<div class="section">
+<h3>Where to watch in Kenya</h3>
+<div class="provider-list" id="providers">
+<p class="muted">Checking availability...</p>
+</div>
+<p class="muted" id="providerNote"></p>
+</div>
+<div class="section">
+<h3>Official Trailer</h3>
+<div id="trailerArea" class="muted">Checking for trailer...</div>
+</div>
+<div class="section">
+<h3>Similar Movies</h3>
+<div class="movie-grid" id="similarGrid"></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="modal" id="profileModal" onclick="if(event.target===this)closeProfiles()">
+<div class="modal-box">
+<div class="modal-body">
+<button class="close" onclick="closeProfiles()">×</button>
+<h2>Who's watching?</h2>
+<p class="muted">Choose a profile or create a new one.</p>
+<div class="profile-grid" id="profileGrid"></div>
+<div class="profile-form">
+<input id="newProfileName" placeholder="Profile name" maxlength="20">
+<button class="primary" onclick="createProfile()">Create profile</button>
+</div>
+<p class="muted">Profiles are saved only in this browser on this device.</p>
+</div>
+</div>
+</div>
+
+<script>
+const API_KEY = "c62372d2ec3bf2b8ea24a7ccc0b1f4d1";
+const BASE = "https://api.themoviedb.org/3";
+const IMG = "https://image.tmdb.org/t/p/";
+let currentMovie = null;
+let heroMovie = null;
+let genres = [];
+let currentPage = "discover";
+
+function api(path){
+if(API_KEY === "PASTE_YOUR_TMDB_V3_API_KEY_HERE"){
+throw new Error("Add your TMDB API key in the code first.");
+}
+return fetch(BASE + path + (path.includes("?") ? "&" : "?") + "api_key=" + API_KEY)
+.then(r=>{
+if(!r.ok)throw new Error("TMDB request failed: "+r.status);
+return r.json();
+});
+}
+
+function poster(path){
+return path ? IMG+"w500"+path : "";
+}
+
+function movieCard(movie){
+const image = poster(movie.poster_path);
+return `
+<div class="movie-card" onclick="showDetails(${movie.id})">
+<img src="${image}" alt="${escapeHTML(movie.title || "Movie poster")}" loading="lazy"
+onerror="this.style.background='#252039';this.alt='Poster unavailable'">
+<div class="movie-info">
+<h3>${escapeHTML(movie.title || "Untitled")}</h3>
+<p><span class="rating">★ ${Number(movie.vote_average || 0).toFixed(1)}</span>
+&nbsp;·&nbsp; ${(movie.release_date || "").slice(0,4)}</p>
+</div>
+</div>`;
+}
+
+function escapeHTML(value){
+return String(value).replace(/[&<>"']/g, c=>({
+"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[c]));
+}
+
+function displayMovies(id,movies){
+document.getElementById(id).innerHTML = movies.length
+? movies.map(movieCard).join("")
+: '<div class="empty">No movies found.</div>';
+}
+
+async function loadGenres(){
+const data=await api("/genre/movie/list");
+genres=data.genres || [];
+document.getElementById("genreSelect").innerHTML=
+'<option value="">All genres</option>'+
+genres.map(g=>`<option value="${g.id}">${escapeHTML(g.name)}</option>`).join("");
+document.getElementById("genreChips").innerHTML=
+genres.slice(0,12).map(g=>
+`<button class="chip" onclick="chooseGenre(${g.id},this)">${escapeHTML(g.name)}</button>`
+).join("");
+}
+
+async function loadHero(){
+const data=await api("/trending/movie/week");
+heroMovie=data.results?.[0];
+if(!heroMovie)return;
+const backdrop=heroMovie.backdrop_path
+? IMG+"original"+heroMovie.backdrop_path : "";
+document.getElementById("hero").style.backgroundImage=
+`linear-gradient(90deg,#080711 5%,#080711dd 42%,#08071130),linear-gradient(0deg,#080711,transparent 50%),url('${backdrop}')`;
+document.getElementById("heroTitle").textContent=heroMovie.title;
+document.getElementById("heroDescription").textContent=heroMovie.overview || "Explore this trending movie.";
+}
+
+function openHeroMovie(){
+if(heroMovie)showDetails(heroMovie.id);
+}
+
+async function loadCollections(){
+const [trending,top,popular,upcoming]=await Promise.all([
+api("/trending/movie/week"),
+api("/movie/top_rated"),
+api("/movie/popular"),
+api("/movie/upcoming")
+]);
+displayMovies("trendingGrid",trending.results || []);
+displayMovies("topGrid",top.results || []);
+displayMovies("popularGrid",popular.results || []);
+displayMovies("upcomingGrid",upcoming.results || []);
+}
+
+async function searchMovies(){
+const query=document.getElementById("searchInput").value.trim();
+const genre=document.getElementById("genreSelect").value;
+let data;
+if(query){
+data=await api("/search/movie?query="+encodeURIComponent(query));
+}else if(genre){
+data=await api("/discover/movie?with_genres="+genre+"&sort_by=popularity.desc");
+}else{
+data=await api("/movie/popular");
+}
+document.getElementById("searchSection").classList.remove("hidden");
+document.getElementById("searchHeading").textContent=
+query ? "Results for: "+query : "Filtered Movies";
+displayMovies("searchGrid",data.results || []);
+document.getElementById("searchSection").scrollIntoView({behavior:"smooth"});
+}
+
+function chooseGenre(id,button){
+document.getElementById("genreSelect").value=id;
+document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
+button.classList.add("active");
+searchMovies();
+}
+
+function filterGenre(){
+searchMovies();
+}
+
+async function showDetails(id){
+try{
+const [movie,videos,providers,similar]=await Promise.all([
+api("/movie/"+id),
+api("/movie/"+id+"/videos"),
+api("/movie/"+id+"/watch/providers"),
+api("/movie/"+id+"/similar")
+]);
+currentMovie=movie;
+document.getElementById("modalTitle").textContent=movie.title;
+document.getElementById("modalMeta").textContent=
+(movie.release_date || "Release date unknown").slice(0,4)+
+" · ★ "+Number(movie.vote_average || 0).toFixed(1)+
+" · "+(movie.runtime ? movie.runtime+" minutes" : "Runtime unavailable");
+document.getElementById("modalOverview").textContent=movie.overview || "No description available.";
+document.getElementById("modalTop").style.backgroundImage=
+`linear-gradient(90deg,#100d1cdd,transparent),linear-gradient(0deg,#151222,transparent),url('${movie.backdrop_path ? IMG+"w1280"+movie.backdrop_path : ""}')`;
+updateWatchlistButton();
+
+const kenya=providers.results?.KE;
+const providerBox=document.getElementById("providers");
+const providerNote=document.getElementById("providerNote");
+if(kenya){
+let all=[...(kenya.flatrate || []),...(kenya.free || []),...(kenya.ads || []),...(kenya.rent || []),...(kenya.buy || [])];
+let unique=[...new Map(all.map(p=>[p.provider_id,p])).values()];
+providerBox.innerHTML=unique.length
+? unique.map(p=>`<span class="provider">${escapeHTML(p.provider_name)}</span>`).join("")
+: "No provider listings currently available.";
+providerNote.innerHTML=`<a style="color:#c4b5fd" target="_blank" rel="noopener" href="${kenya.link}">View availability details</a>`;
+}else{
+providerBox.textContent="No Kenya provider information is currently listed.";
+providerNote.textContent="Availability can change. Check licensed streaming services directly.";
+}
+
+const trailer=videos.results?.find(v=>v.site==="YouTube" && v.type==="Trailer" && v.official)
+|| videos.results?.find(v=>v.site==="YouTube" && v.type==="Trailer");
+document.getElementById("trailerArea").innerHTML=trailer
+? `<iframe class="trailer" src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}" title="Official movie trailer" allowfullscreen loading="lazy"></iframe>`
+: "No official trailer is currently available.";
+
+displayMovies("similarGrid",(similar.results || []).slice(0,6));
+document.getElementById("movieModal").style.display="block";
+}catch(error){
+alert(error.message);
+}
+}
+
+function closeModal(){
+document.getElementById("movieModal").style.display="none";
+}
+
+function getProfiles(){
+return JSON.parse(localStorage.getItem("sf_profiles") || "[]");
+}
+
+function saveProfiles(profiles){
+localStorage.setItem("sf_profiles",JSON.stringify(profiles));
+}
+
+function getActiveProfile(){
+return localStorage.getItem("sf_active_profile") || "";
+}
+
+function profileWatchlist(){
+const profile=getActiveProfile();
+return JSON.parse(localStorage.getItem("sf_watchlist_"+profile) || "[]");
+}
+
+function saveWatchlist(list){
+localStorage.setItem("sf_watchlist_"+getActiveProfile(),JSON.stringify(list));
+}
+
+function updateWatchlistButton(){
+if(!currentMovie)return;
+const saved=profileWatchlist().some(m=>m.id===currentMovie.id);
+document.getElementById("watchlistButton").textContent=
+saved ? "✓ Remove from Watchlist" : "＋ Add to Watchlist";
+}
+
+function toggleCurrentMovie(){
+if(!currentMovie)return;
+let list=profileWatchlist();
+if(list.some(m=>m.id===currentMovie.id)){
+list=list.filter(m=>m.id!==currentMovie.id);
+}else{
+list.push(currentMovie);
+}
+saveWatchlist(list);
+updateWatchlistButton();
+renderWatchlist();
+}
+
+function renderWatchlist(){
+const list=profileWatchlist();
+displayMovies("watchlistGrid",list);
+}
+
+function openProfiles(){
+renderProfiles();
+document.getElementById("profileModal").style.display="block";
+}
+
+function closeProfiles(){
+document.getElementById("profileModal").style.display="none";
+}
+
+function renderProfiles(){
+const profiles=getProfiles();
+document.getElementById("profileGrid").innerHTML=profiles.length
+? profiles.map(p=>`
+<div class="profile" onclick="selectProfile('${p.id}')">
+<div class="avatar">🎬</div>
+<strong>${escapeHTML(p.name)}</strong>
+${p.id===getActiveProfile() ? '<p class="muted">Current profile</p>' : ''}
+</div>`).join("")
+: '<p class="muted">No profiles yet. Create your first profile below.</p>';
+}
+
+function createProfile(){
+const name=document.getElementById("newProfileName").value.trim();
+if(!name){alert("Enter a profile name first.");return;}
+const profiles=getProfiles();
+if(profiles.length>=5){alert("You can create up to 5 profiles.");return;}
+const id="profile_"+Date.now();
+profiles.push({id,name});
+saveProfiles(profiles);
+document.getElementById("newProfileName").value="";
+selectProfile(id);
+}
+
+function selectProfile(id){
+localStorage.setItem("sf_active_profile",id);
+const profile=getProfiles().find(p=>p.id===id);
+document.getElementById("profileName").textContent=profile?.name || "Guest";
+closeProfiles();
+renderWatchlist();
+updateWatchlistButton();
+}
+
+function showPage(page,button){
+currentPage=page;
+["discover","watchlist","about"].forEach(p=>{
+document.getElementById(p+"Page").classList.toggle("hidden",p!==page);
+});
+document.getElementById("searchSection").classList.add("hidden");
+document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+if(button)button.classList.add("active");
+if(page==="watchlist")renderWatchlist();
+window.scrollTo({top:0,behavior:"smooth"});
+}
+
+async function startApp(){
+try{
+const profiles=getProfiles();
+if(!profiles.length){
+const id="profile_"+Date.now();
+saveProfiles([{id,name:"My Profile"}]);
+localStorage.setItem("sf_active_profile",id);
+}
+const active=getProfiles().find(p=>p.id===getActiveProfile()) || getProfiles()[0];
+selectProfile(active.id);
+await loadGenres();
+await Promise.all([loadHero(),loadCollections()]);
+}catch(error){
+document.getElementById("trendingGrid").innerHTML=
+`<div class="empty">${escapeHTML(error.message)}</div>`;
+}
+}
+
+document.addEventListener("keydown",event=>{
+if(event.key==="Escape"){
+closeModal();
+closeProfiles();
+}
+});
+
+startApp();
+</script>
+</body>
+</html>
