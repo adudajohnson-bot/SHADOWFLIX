@@ -178,7 +178,16 @@ main{padding:20px 4% 50px}
 
 <main>
 <div id="discoverPage">
-<div class="section">
+<div class="section" id="recommendationsSection">
+  <div class="section-head">
+    <h2>✨ Made For You</h2>
+    <span class="muted">Based on your watchlist</span>
+  </div>
+  <div class="movie-grid" id="recommendationsGrid">
+    <div class="empty">Add movies to your watchlist to get recommendations.</div>
+  </div>
+</div>
+  <div class="section">
 <div class="section-head"><h2>Discover Movies</h2></div>
 <div class="search-area">
 <input id="searchInput" placeholder="Search movies..." onkeydown="if(event.key==='Enter')searchMovies()">
@@ -497,10 +506,43 @@ saveWatchlist(list);
 updateWatchlistButton();
 renderWatchlist();
 }
+async function loadRecommendations(){
+  const grid = document.getElementById("recommendationsGrid");
+  const saved = profileWatchlist();
 
+  if(!saved.length){
+    grid.innerHTML = '<div class="empty">Add movies to your watchlist to get recommendations.</div>';
+    return;
+  }
+
+  grid.innerHTML = '<div class="empty">Finding movies you might enjoy...</div>';
+
+  try{
+    const recent = saved.slice(-3);
+
+    const results = await Promise.all(
+      recent.map(movie => api("/movie/" + movie.id + "/similar"))
+    );
+
+    const savedIds = new Set(saved.map(movie => movie.id));
+    const recommendations = results
+      .flatMap(result => result.results || [])
+      .filter(movie => !savedIds.has(movie.id));
+
+    const unique = [...new Map(
+      recommendations.map(movie => [movie.id, movie])
+    ).values()];
+
+    displayMovies("recommendationsGrid", unique.slice(0,12));
+
+  }catch(error){
+    grid.innerHTML = '<div class="empty">Could not load recommendations. Please try again.</div>';
+  }
+}
 function renderWatchlist(){
 const list=profileWatchlist();
 displayMovies("watchlistGrid",list);
+loadRecommendations();  
 }
 
 function openProfiles(){
@@ -569,6 +611,7 @@ const active=getProfiles().find(p=>p.id===getActiveProfile()) || getProfiles()[0
 selectProfile(active.id);
 await loadGenres();
 await Promise.all([loadHero(),loadCollections()]);
+await loadRecommendations();  
 }catch(error){
 document.getElementById("trendingGrid").innerHTML=
 `<div class="empty">${escapeHTML(error.message)}</div>`;
