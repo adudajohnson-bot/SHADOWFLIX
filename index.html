@@ -142,3 +142,66 @@ async function showDetails(id) {
     content.textContent = error.message;
   }
 }
+
+function closeDialog() {
+  document.getElementById("movieDialog").style.display = "none";
+  document.getElementById("dialogContent").innerHTML = "";
+}
+
+document.getElementById("searchButton").addEventListener("click", () => {
+  currentQuery = searchInput.value.trim();
+  currentGenre = genreFilter.value;
+  showingWatchlist = false;
+  loadMovies();
+});
+
+searchInput.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    document.getElementById("searchButton").click();
+  }
+});
+
+genreFilter.addEventListener("change", () => {
+  currentGenre = genreFilter.value;
+  currentQuery = "";
+  searchInput.value = "";
+  showingWatchlist = false;
+  loadMovies();
+});
+
+sortFilter.addEventListener("change", () => {
+  currentMode = sortFilter.value;
+  currentQuery = "";
+  currentGenre = "";
+  searchInput.value = "";
+  genreFilter.value = "";
+  showingWatchlist = false;
+  loadMovies();
+});
+
+document.getElementById("watchlistButton")
+  .addEventListener("click", displayWatchlist);
+
+loadMoreButton.addEventListener("click", () => {
+  page++;
+  loadMovies(true);
+});
+
+document.getElementById("closeDialog")
+  .addEventListener("click", closeDialog);
+
+document.getElementById("movieDialog").addEventListener("click", event => {
+  if (event.target.id === "movieDialog") closeDialog();
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeDialog();
+});
+
+async function startApp() {
+  await loadGenres();
+  await Promise.all([loadCollections(), loadMovies()]);
+}
+
+startApp();
+
