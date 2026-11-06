@@ -87,6 +87,10 @@ select option{background:#171426}
 .auth-panel h3{margin-top:0}
 .auth-input{width:100%;margin:7px 0;min-width:0}
 .auth-message{font-size:13px;line-height:1.5;color:#c4b5fd;overflow-wrap:anywhere}
+.account-avatar{width:76px;height:76px;border-radius:50%;object-fit:cover;border:2px solid var(--purple);background:var(--panel2);display:block;margin:10px 0}
+.profile-edit{margin-top:15px;padding-top:15px;border-top:1px solid #ffffff20}
+.profile-edit label{display:block;margin:10px 0 5px;color:var(--muted);font-size:13px}
+.profile-edit input{width:100%;min-width:0}
 footer{border-top:1px solid #ffffff15;padding:30px 6%;text-align:center;color:var(--muted);font-size:13px}
 .hidden{display:none!important}
 .empty{padding:35px;text-align:center;color:var(--muted)}
@@ -201,7 +205,7 @@ main{padding:20px 4% 50px}
 </main>
 
 <footer>
-SHADOWFLIX 4.0 · Discover. Explore. Enjoy.<br><br>
+SHADOWFLIX 5.0 · Discover. Explore. Enjoy.<br><br>
 Movie information provided by TMDB.
 </footer>
 
@@ -251,7 +255,17 @@ Movie information provided by TMDB.
 <h3>You're signed in</h3>
 <p class="muted" id="accountEmail"></p>
 <p class="auth-message">Your watchlist is connected to your account.</p>
-<button class="primary" onclick="signOut()">Log out</button>
+<div class="profile-edit">
+<h3>Your online profile</h3>
+<img id="accountAvatar" class="account-avatar" alt="Your profile picture" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='76' height='76'%3E%3Crect width='100%25' height='100%25' fill='%23191629'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-size='38'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E">
+<label for="profileUsername">Username</label>
+<input class="auth-input" id="profileUsername" maxlength="20" placeholder="Choose a username">
+<label for="profileAvatarFile">Profile picture</label>
+<input class="auth-input" id="profileAvatarFile" type="file" accept="image/png,image/jpeg,image/webp">
+<button class="primary" onclick="saveOnlineProfile()">Save profile</button>
+<p class="auth-message" id="profileMessage">Choose a username and optionally upload a picture.</p>
+</div>
+<button class="secondary" onclick="signOut()">Log out</button>
 </div>
 
 <div class="section">
@@ -288,6 +302,7 @@ const IMG = "https://image.tmdb.org/t/p/";
 let supabaseClient = null;
 let currentUser = null;
 let cloudWatchlist = [];
+let onlineProfile = null;
 let currentMovie = null;
 let heroMovie = null;
 let genres = [];
@@ -558,6 +573,99 @@ localStorage.setItem("sf_watchlist_"+getActiveProfile(),JSON.stringify(list));
 // 7. ONLINE WATCHLIST
 // --------------------------------------------------
 
+
+// --------------------------------------------------
+// ONLINE USER PROFILES
+// --------------------------------------------------
+
+async function loadUserProfile(){
+ if(!currentUser){
+  onlineProfile=null;
+  return;
+ }
+
+ const {data,error}=await supabaseClient
+  .from("profiles")
+  .select("user_id,username,avatar_url")
+  .eq("user_id",currentUser.id)
+  .maybeSingle();
+
+ if(error) throw error;
+ onlineProfile=data || null;
+ document.getElementById("profileUsername").value=onlineProfile?.username || "";
+ document.getElementById("accountAvatar").src=onlineProfile?.avatar_url ||
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='76' height='76'%3E%3Crect width='100%25' height='100%25' fill='%23191629'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-size='38'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E";
+ updateAccountDisplay();
+}
+
+async function saveOnlineProfile(){
+ if(!currentUser){
+  document.getElementById("profileMessage").textContent="Please sign in first.";
+  return;
+ }
+
+ const message=document.getElementById("profileMessage");
+ const username=document.getElementById("profileUsername").value.trim();
+ const file=document.getElementById("profileAvatarFile").files[0];
+ const saveButton=document.querySelector("#signedInArea .primary");
+
+ if(!/^[a-zA-Z0-9_]{3,20}$/.test(username)){
+  message.textContent="Username must be 3–20 characters using letters, numbers or underscores.";
+  return;
+ }
+ if(file && !["image/jpeg","image/png","image/webp"].includes(file.type)){
+  message.textContent="Choose a JPG, PNG or WebP image.";
+  return;
+ }
+ if(file && file.size>2*1024*1024){
+  message.textContent="Please choose an image smaller than 2 MB.";
+  return;
+ }
+
+ saveButton.disabled=true;
+ message.textContent="Saving your profile...";
+ try{
+  let avatarUrl=onlineProfile?.avatar_url || null;
+
+  if(file){
+   const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+   const filePath=`${currentUser.id}/${Date.now()}-${safeName}`;
+   const {error:uploadError}=await supabaseClient.storage
+    .from("profile-avatars")
+    .upload(filePath,file,{upsert:true,contentType:file.type});
+   if(uploadError) throw uploadError;
+
+   const {data:urlData}=supabaseClient.storage
+    .from("profile-avatars")
+    .getPublicUrl(filePath);
+   avatarUrl=urlData.publicUrl;
+  }
+
+  const {data,error}=await supabaseClient
+   .from("profiles")
+   .upsert({
+    user_id:currentUser.id,
+    username,
+    avatar_url:avatarUrl,
+    updated_at:new Date().toISOString()
+   },{onConflict:"user_id"})
+   .select("user_id,username,avatar_url")
+   .single();
+
+  if(error) throw error;
+  onlineProfile=data;
+  if(avatarUrl) document.getElementById("accountAvatar").src=avatarUrl;
+  document.getElementById("profileAvatarFile").value="";
+  updateAccountDisplay();
+  message.textContent="Profile saved successfully!";
+ }catch(error){
+  console.error("Profile save error:",error);
+  message.textContent="Could not save profile: "+error.message;
+ }finally{
+  saveButton.disabled=false;
+ }
+}
+
 async function loadCloudWatchlist(){
 if(!currentUser){
 cloudWatchlist=[];
@@ -774,6 +882,7 @@ return;
 
 currentUser=null;
 cloudWatchlist=[];
+onlineProfile=null;
 updateAccountDisplay();
 renderWatchlist();
 updateWatchlistButton();
@@ -789,7 +898,7 @@ signedIn.classList.remove("hidden");
 
 document.getElementById("accountEmail").textContent=currentUser.email || "Signed in";
 document.getElementById("profileName").textContent=
-currentUser.email ? currentUser.email.split("@")[0] : "Account";
+onlineProfile?.username || (currentUser.email ? currentUser.email.split("@")[0] : "Account");
 
 }else{
 signedIn.classList.add("hidden");
@@ -807,6 +916,7 @@ currentUser=data.session?.user || null;
 
 if(currentUser){
 await loadCloudWatchlist();
+await loadUserProfile();
 }
 
 updateAccountDisplay();
@@ -814,7 +924,7 @@ updateAccountDisplay();
 supabaseClient.auth.onAuthStateChange((event,session)=>{
 currentUser=session?.user || null;
 
-loadCloudWatchlist().then(()=>{
+Promise.all([loadCloudWatchlist(),loadUserProfile()]).then(()=>{
 updateAccountDisplay();
 renderWatchlist();
 updateWatchlistButton();
@@ -949,6 +1059,13 @@ document.getElementById("trendingGrid").innerHTML=
 `<div class="empty">${escapeHTML(error.message)}</div>`;
 }
 }
+
+document.getElementById("profileAvatarFile").addEventListener("change",event=>{
+const file=event.target.files[0];
+if(file && file.size<=2*1024*1024){
+document.getElementById("accountAvatar").src=URL.createObjectURL(file);
+}
+});
 
 document.addEventListener("keydown",event=>{
 if(event.key==="Escape"){
