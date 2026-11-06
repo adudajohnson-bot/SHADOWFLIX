@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080711">
-<title>SHADOWFLIX 7.0 | Discover Movies</title>
+<title>SHADOWFLIX 8.0 | Discover Movies</title>
 
 <style>
 *{box-sizing:border-box}
@@ -215,6 +215,14 @@ main{padding:20px 4% 50px}
 </div>
 <p class="community-hint" id="communityMessage">Search for a username to find members.</p>
 <div class="movie-grid" id="communityResults"></div>
+<div class="section" style="margin-top:32px">
+ <h3>👥 My Community Network</h3>
+ <p class="muted">See the members who follow you and the members you follow.</p>
+ <button class="secondary" onclick="loadMyNetwork('followers')">My Followers</button>
+ <button class="secondary" onclick="loadMyNetwork('following')">Following</button>
+ <p class="community-hint" id="networkMessage">Choose a list to view your network.</p>
+ <div class="movie-grid" id="networkResults"></div>
+</div>
 </div>
 </div>
 </div>
@@ -234,7 +242,7 @@ main{padding:20px 4% 50px}
 </main>
 
 <footer>
-SHADOWFLIX 7.0 · Discover. Explore. Connect.<br><br>
+SHADOWFLIX 8.0 · Discover. Explore. Connect.<br><br>
 Movie information provided by TMDB.
 </footer>
 
@@ -318,6 +326,12 @@ Movie information provided by TMDB.
    <img id="publicProfileAvatar" class="account-avatar" alt="Public profile picture">
    <h3 id="publicProfileUsername"></h3>
    <p class="muted">Public member profile</p>
+   <div class="community-stats" style="display:flex;gap:24px;flex-wrap:wrap;margin:18px 0">
+    <div><strong id="publicFollowerCount">0</strong><div class="muted">Followers</div></div>
+    <div><strong id="publicFollowingCount">0</strong><div class="muted">Following</div></div>
+   </div>
+   <button class="primary" id="publicFollowButton" onclick="toggleFollow()">Follow</button>
+   <p class="community-hint" id="publicFollowMessage"></p>
   </div>
  </div>
 </div>
@@ -348,6 +362,8 @@ let currentMovie = null;
 let heroMovie = null;
 let genres = [];
 let currentPage = "discover";
+let viewedProfileId = null;
+let viewedProfileUsername = "";
 
 // --------------------------------------------------
 // 2. CONNECT TO SUPABASE
@@ -1098,40 +1114,103 @@ async function searchCommunityProfiles(){
 }
 
 
+async function getFollowCounts(userId){
+ const [followers,following]=await Promise.all([
+  supabaseClient.from("follows").select("follower_id",{count:"exact",head:true}).eq("following_id",userId),
+  supabaseClient.from("follows").select("following_id",{count:"exact",head:true}).eq("follower_id",userId)
+ ]);
+ if(followers.error) throw followers.error;
+ if(following.error) throw following.error;
+ return {followers:followers.count||0,following:following.count||0};
+}
+
 async function viewPublicProfile(userId){
  const modal=document.getElementById("publicProfileModal");
  const username=document.getElementById("publicProfileUsername");
  const avatar=document.getElementById("publicProfileAvatar");
+ const followButton=document.getElementById("publicFollowButton");
+ const message=document.getElementById("publicFollowMessage");
  const fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='76' height='76'%3E%3Crect width='100%25' height='100%25' fill='%23191629'/%3E%3Ctext x='50%25' y='60%25' text-anchor='middle' font-size='38'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E";
-
- if(!currentUser){
-  alert("Please sign in to view public profiles.");
-  return;
- }
-
- username.textContent="Loading profile...";
- avatar.src=fallback;
- modal.style.display="block";
-
+ if(!currentUser){ alert("Please sign in to view public profiles."); return; }
+ viewedProfileId=userId;
+ username.textContent="Loading profile..."; avatar.src=fallback;
+ message.textContent=""; followButton.disabled=true; modal.style.display="block";
  try{
-  const {data,error}=await supabaseClient
-   .from("profiles")
-   .select("username,avatar_url")
-   .eq("user_id",userId)
-   .maybeSingle();
-
+  const {data,error}=await supabaseClient.from("profiles").select("username,avatar_url").eq("user_id",userId).maybeSingle();
   if(error) throw error;
-  if(!data || !data.username){
-   username.textContent="Profile not found.";
-   return;
-  }
-
-  username.textContent="@"+data.username;
-  avatar.src=data.avatar_url || fallback;
+  if(!data || !data.username){ username.textContent="Profile not found."; followButton.style.display="none"; return; }
+  viewedProfileUsername=data.username;
+  username.textContent="@"+data.username; avatar.src=data.avatar_url||fallback;
   avatar.onerror=()=>{avatar.src=fallback;};
+  const counts=await getFollowCounts(userId);
+  document.getElementById("publicFollowerCount").textContent=counts.followers;
+  document.getElementById("publicFollowingCount").textContent=counts.following;
+  if(userId===currentUser.id){ followButton.style.display="none"; message.textContent="This is your profile."; }
+  else{
+   followButton.style.display="inline-block";
+   const {data:existing,error:followError}=await supabaseClient.from("follows").select("follower_id").eq("follower_id",currentUser.id).eq("following_id",userId).maybeSingle();
+   if(followError) throw followError;
+   followButton.textContent=existing?"Unfollow":"Follow";
+   followButton.disabled=false;
+  }
  }catch(error){
   console.error("Public profile error:",error);
   username.textContent="Could not load this profile.";
+  message.textContent=error.message;
+  followButton.disabled=true;
+ }
+}
+
+async function toggleFollow(){
+ if(!currentUser || !viewedProfileId || viewedProfileId===currentUser.id) return;
+ const button=document.getElementById("publicFollowButton");
+ const message=document.getElementById("publicFollowMessage");
+ button.disabled=true;
+ try{
+  if(button.textContent.trim()==="Follow"){
+   const {error}=await supabaseClient.from("follows").insert({follower_id:currentUser.id,following_id:viewedProfileId});
+   if(error) throw error;
+   button.textContent="Unfollow"; message.textContent="You are now following @"+viewedProfileUsername+".";
+  }else{
+   const {error}=await supabaseClient.from("follows").delete().eq("follower_id",currentUser.id).eq("following_id",viewedProfileId);
+   if(error) throw error;
+   button.textContent="Follow"; message.textContent="You unfollowed @"+viewedProfileUsername+".";
+  }
+  const counts=await getFollowCounts(viewedProfileId);
+  document.getElementById("publicFollowerCount").textContent=counts.followers;
+  document.getElementById("publicFollowingCount").textContent=counts.following;
+ }catch(error){
+  console.error("Follow action error:",error);
+  message.textContent="Could not update follow status: "+error.message;
+ }finally{ button.disabled=false; }
+}
+
+async function loadMyNetwork(type){
+ const message=document.getElementById("networkMessage");
+ const results=document.getElementById("networkResults");
+ if(!currentUser) return;
+ message.textContent=type==="followers"?"Loading your followers...":"Loading the members you follow...";
+ results.innerHTML="";
+ try{
+  const column=type==="followers"?"follower_id":"following_id";
+  const filter=type==="followers"?"following_id":"follower_id";
+  const {data,error}=await supabaseClient.from("follows").select(column).eq(filter,currentUser.id).order("created_at",{ascending:false});
+  if(error) throw error;
+  const ids=(data||[]).map(row=>row[column]);
+  if(!ids.length){message.textContent=type==="followers"?"You don't have any followers yet.":"You aren't following anyone yet.";return;}
+  const {data:profiles,error:profileError}=await supabaseClient.from("profiles").select("user_id,username,avatar_url").in("user_id",ids);
+  if(profileError) throw profileError;
+  const fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='58' height='58'%3E%3Crect width='100%25' height='100%25' fill='%23191629'/%3E%3Ctext x='50%25' y='60%25' text-anchor='middle' font-size='30'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E";
+  const byId=new Map((profiles||[]).map(profile=>[profile.user_id,profile]));
+  const ordered=ids.map(id=>byId.get(id)).filter(profile=>profile&&profile.username);
+  message.textContent=ordered.length+(type==="followers"?" follower":" followed member")+(ordered.length===1?"":"s")+" found.";
+  results.innerHTML=ordered.map(profile=>{
+   const avatar=profile.avatar_url?escapeHTML(profile.avatar_url):fallback;
+   return `<div class="community-card"><img class="community-avatar" src="${avatar}" alt="Profile picture" onerror="this.src='${fallback}'"><div><strong>@${escapeHTML(profile.username)}</strong><p class="community-hint">SHADOWFLIX member</p></div><button class="secondary profile-view-button" onclick="viewPublicProfile('${escapeHTML(profile.user_id)}')">View Profile</button></div>`;
+  }).join("");
+ }catch(error){
+  console.error("Network loading error:",error);
+  message.textContent="Could not load this list: "+error.message;
  }
 }
 
