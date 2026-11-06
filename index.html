@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080711">
-<title>SHADOWFLIX 4.0 | Discover Movies</title>
+<title>SHADOWFLIX 6.0 | Discover Movies</title>
 
 <style>
 *{box-sizing:border-box}
@@ -82,6 +82,13 @@ select option{background:#171426}
 .profile .avatar{font-size:35px}
 .profile:hover{border-color:var(--purple)}
 .profile-form{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.community-intro{max-width:720px;line-height:1.7}
+.community-search{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}
+.community-search input{flex:1;min-width:190px;background:var(--panel2);border:1px solid #ffffff25;color:white;border-radius:9px;padding:13px}
+.community-card{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid #ffffff18;border-radius:12px;padding:15px;min-width:0}
+.community-avatar{width:58px;height:58px;flex:0 0 58px;border-radius:50%;object-fit:cover;background:var(--panel2);border:1px solid #ffffff25}
+.community-card strong{overflow-wrap:anywhere}
+.community-hint{font-size:13px;color:var(--muted);line-height:1.6}
 .profile-form input{padding:12px;background:var(--panel2);border:1px solid #ffffff25;color:white;border-radius:8px}
 .auth-panel{margin-top:25px;padding:20px;background:var(--panel);border:1px solid #ffffff20;border-radius:12px}
 .auth-panel h3{margin-top:0}
@@ -116,6 +123,7 @@ main{padding:20px 4% 50px}
 <nav>
 <button class="active" onclick="showPage('discover',this)">Discover</button>
 <button onclick="showPage('watchlist',this)">My Watchlist</button>
+<button onclick="showPage('community',this)">Community</button>
 <button onclick="showPage('about',this)">About</button>
 </nav>
 <button class="profile-btn" onclick="openProfiles()">👤 <span id="profileName">Guest</span></button>
@@ -190,6 +198,26 @@ main{padding:20px 4% 50px}
 <div class="movie-grid" id="watchlistGrid"></div>
 </div>
 
+<div id="communityPage" class="hidden">
+<div class="section">
+<h2>🌐 SHADOWFLIX Community</h2>
+<p class="muted community-intro">Discover other SHADOWFLIX members by their public username. Only usernames and profile pictures are shown here. Email addresses and personal watchlists stay private.</p>
+<div id="communitySignIn" class="auth-panel">
+<strong>Sign in to explore the community.</strong>
+<p class="community-hint">You need a SHADOWFLIX account to search public member profiles.</p>
+<button class="primary" onclick="openProfiles()">Sign in / Create account</button>
+</div>
+<div id="communitySearchArea" class="hidden">
+<div class="community-search">
+<input id="communitySearchInput" maxlength="20" placeholder="Search usernames..." onkeydown="if(event.key==='Enter')searchCommunityProfiles()">
+<button class="primary" onclick="searchCommunityProfiles()">Search</button>
+</div>
+<p class="community-hint" id="communityMessage">Search for a username to find members.</p>
+<div class="movie-grid" id="communityResults"></div>
+</div>
+</div>
+</div>
+
 <div id="aboutPage" class="hidden">
 <div class="section">
 <h2>About SHADOWFLIX</h2>
@@ -205,7 +233,7 @@ main{padding:20px 4% 50px}
 </main>
 
 <footer>
-SHADOWFLIX 5.0 · Discover. Explore. Enjoy.<br><br>
+SHADOWFLIX 6.0 · Discover. Explore. Connect.<br><br>
 Movie information provided by TMDB.
 </footer>
 
@@ -928,6 +956,7 @@ Promise.all([loadCloudWatchlist(),loadUserProfile()]).then(()=>{
 updateAccountDisplay();
 renderWatchlist();
 updateWatchlistButton();
+updateCommunityAccess();
 }).catch(error=>{
 console.error("Account watchlist error:",error.message);
 });
@@ -1000,13 +1029,69 @@ updateWatchlistButton();
 }
 
 // --------------------------------------------------
-// 10. PAGE NAVIGATION
+// 10. PUBLIC COMMUNITY PROFILES
+// --------------------------------------------------
+
+function updateCommunityAccess(){
+ const signIn=document.getElementById("communitySignIn");
+ const searchArea=document.getElementById("communitySearchArea");
+ signIn.classList.toggle("hidden",!!currentUser);
+ searchArea.classList.toggle("hidden",!currentUser);
+ if(!currentUser){
+  document.getElementById("communityResults").innerHTML="";
+  document.getElementById("communityMessage").textContent="Sign in to search public profiles.";
+ }
+}
+
+async function searchCommunityProfiles(){
+ const message=document.getElementById("communityMessage");
+ const results=document.getElementById("communityResults");
+ if(!currentUser){
+  updateCommunityAccess();
+  return;
+ }
+ const query=document.getElementById("communitySearchInput").value.trim();
+ if(query.length<2){
+  message.textContent="Enter at least 2 characters to search usernames.";
+  results.innerHTML="";
+  return;
+ }
+ message.textContent="Searching public profiles...";
+ results.innerHTML="";
+ try{
+  // Only public profile fields are requested; emails and watchlists are never queried.
+  const {data,error}=await supabaseClient
+   .from("profiles")
+   .select("username,avatar_url")
+   .ilike("username","%"+query+"%")
+   .order("username",{ascending:true})
+   .limit(24);
+  if(error) throw error;
+  const profiles=(data || []).filter(profile=>profile.username);
+  if(!profiles.length){
+   message.textContent="No public profiles found. Try another username.";
+   return;
+  }
+  message.textContent=profiles.length+" public profile"+(profiles.length===1?"":"s")+" found.";
+  const fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='58' height='58'%3E%3Crect width='100%25' height='100%25' fill='%23191629'/%3E%3Ctext x='50%25' y='60%25' text-anchor='middle' font-size='30'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E";
+  results.innerHTML=profiles.map(profile=>{
+   const avatar=profile.avatar_url ? escapeHTML(profile.avatar_url) : fallback;
+   return `<div class="community-card"><img class="community-avatar" src="${avatar}" alt="Profile picture" loading="lazy" onerror="this.src='${fallback}'"><div><strong>@${escapeHTML(profile.username)}</strong><p class="community-hint">SHADOWFLIX member</p></div></div>`;
+  }).join("");
+ }catch(error){
+  console.error("Community search error:",error);
+  message.textContent="Could not search profiles: "+error.message;
+ }
+}
+
+// --------------------------------------------------
+// 11. PAGE NAVIGATION
 // --------------------------------------------------
 
 function showPage(page,button){
 currentPage=page;
 
-["discover","watchlist","about"].forEach(p=>{
+["discover","watchlist","community","about"].forEach(p=>{
 document.getElementById(p+"Page").classList.toggle("hidden",p!==page);
 });
 
@@ -1017,12 +1102,13 @@ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"))
 if(button)button.classList.add("active");
 
 if(page==="watchlist")renderWatchlist();
+if(page==="community")updateCommunityAccess();
 
 window.scrollTo({top:0,behavior:"smooth"});
 }
 
 // --------------------------------------------------
-// 11. START THE APP
+// 12. START THE APP
 // --------------------------------------------------
 
 async function startApp(){
