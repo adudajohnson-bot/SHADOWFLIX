@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080711">
-<title>SHADOWFLIX 8.0 | Discover Movies</title>
+<title>SHADOWFLIX 9.0 | Discover Movies</title>
 
 <style>
 *{box-sizing:border-box}
@@ -99,6 +99,13 @@ select option{background:#171426}
 .profile-edit{margin-top:15px;padding-top:15px;border-top:1px solid #ffffff20}
 .profile-edit label{display:block;margin:10px 0 5px;color:var(--muted);font-size:13px}
 .profile-edit input{width:100%;min-width:0}
+.notification-trigger{position:relative;min-width:48px}
+.notification-badge{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 5px;margin-left:3px;border-radius:20px;background:#ec4899;color:white;font-size:11px;font-weight:bold}
+.notification-item{display:flex;align-items:center;gap:12px;padding:14px;margin:10px 0;background:var(--panel2);border:1px solid #ffffff18;border-radius:10px}
+.notification-item.unread{border-color:#8b5cf6;background:#211a35}
+.notification-item .notification-copy{flex:1;min-width:0;line-height:1.5}
+.notification-item small{display:block;color:var(--muted);margin-top:4px}
+.notification-item button{flex:0 0 auto}
 footer{border-top:1px solid #ffffff15;padding:30px 6%;text-align:center;color:var(--muted);font-size:13px}
 .hidden{display:none!important}
 .empty{padding:35px;text-align:center;color:var(--muted)}
@@ -127,7 +134,7 @@ main{padding:20px 4% 50px}
 <button onclick="showPage('community',this)">Community</button>
 <button onclick="showPage('about',this)">About</button>
 </nav>
-<button class="profile-btn" onclick="openProfiles()">👤 <span id="profileName">Guest</span></button>
+<div style="display:flex;align-items:center;gap:9px"><button class="profile-btn notification-trigger" id="notificationButton" onclick="openNotifications()" aria-label="Notifications">🔔 <span id="notificationBadge" class="notification-badge hidden">0</span></button><button class="profile-btn" onclick="openProfiles()">👤 <span id="profileName">Guest</span></button></div>
 </header>
 
 <section class="hero" id="hero">
@@ -242,7 +249,7 @@ main{padding:20px 4% 50px}
 </main>
 
 <footer>
-SHADOWFLIX 8.0 · Discover. Explore. Connect.<br><br>
+SHADOWFLIX 9.0 · Discover. Explore. Connect.<br><br>
 Movie information provided by TMDB.
 </footer>
 
@@ -336,6 +343,19 @@ Movie information provided by TMDB.
  </div>
 </div>
 
+<div class="modal" id="notificationsModal" onclick="if(event.target===this)closeNotifications()">
+ <div class="modal-box">
+  <div class="modal-body">
+   <button class="close" onclick="closeNotifications()">×</button>
+   <h2>🔔 Notifications</h2>
+   <p class="muted">See when SHADOWFLIX members follow you.</p>
+   <button class="secondary" id="markAllReadButton" onclick="markAllNotificationsRead()">Mark all as read</button>
+   <p class="community-hint" id="notificationsMessage">Loading notifications...</p>
+   <div id="notificationsList"></div>
+  </div>
+ </div>
+</div>
+
 <!-- Supabase library -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -364,6 +384,7 @@ let genres = [];
 let currentPage = "discover";
 let viewedProfileId = null;
 let viewedProfileUsername = "";
+let notificationRefreshTimer = null;
 
 // --------------------------------------------------
 // 2. CONNECT TO SUPABASE
@@ -940,6 +961,8 @@ return;
 currentUser=null;
 cloudWatchlist=[];
 onlineProfile=null;
+updateNotificationBadge(0);
+closeNotifications();
 updateAccountDisplay();
 renderWatchlist();
 updateWatchlistButton();
@@ -977,15 +1000,17 @@ await loadUserProfile();
 }
 
 updateAccountDisplay();
+await loadNotificationBadge();
 
 supabaseClient.auth.onAuthStateChange((event,session)=>{
 currentUser=session?.user || null;
 
-Promise.all([loadCloudWatchlist(),loadUserProfile()]).then(()=>{
+Promise.all([loadCloudWatchlist(),loadUserProfile()]).then(async()=>{
 updateAccountDisplay();
 renderWatchlist();
 updateWatchlistButton();
 updateCommunityAccess();
+await loadNotificationBadge();
 }).catch(error=>{
 console.error("Account watchlist error:",error.message);
 });
@@ -1219,7 +1244,117 @@ function closePublicProfile(){
 }
 
 // --------------------------------------------------
-// 11. PAGE NAVIGATION
+// 11. NOTIFICATIONS
+// --------------------------------------------------
+
+function openNotifications(){
+ if(!currentUser){
+  alert("Please sign in to view notifications.");
+  openProfiles();
+  return;
+ }
+ document.getElementById("notificationsModal").style.display="block";
+ loadNotifications();
+}
+
+function closeNotifications(){
+ document.getElementById("notificationsModal").style.display="none";
+}
+
+function updateNotificationBadge(count){
+ const badge=document.getElementById("notificationBadge");
+ const button=document.getElementById("notificationButton");
+ const total=Number(count)||0;
+ badge.textContent=total>99?"99+":String(total);
+ badge.classList.toggle("hidden",total===0);
+ button.title=total?total+" unread notification"+(total===1?"":"s"):"Notifications";
+}
+
+async function loadNotificationBadge(){
+ if(!currentUser){updateNotificationBadge(0);return;}
+ try{
+  const {count,error}=await supabaseClient.from("notifications")
+   .select("id",{count:"exact",head:true})
+   .is("read_at",null);
+  if(error) throw error;
+  updateNotificationBadge(count||0);
+ }catch(error){
+  console.error("Notification badge error:",error.message);
+ }
+}
+
+async function loadNotifications(){
+ const message=document.getElementById("notificationsMessage");
+ const list=document.getElementById("notificationsList");
+ const markButton=document.getElementById("markAllReadButton");
+ if(!currentUser){message.textContent="Sign in to view notifications.";list.innerHTML="";return;}
+ message.textContent="Loading notifications...";
+ list.innerHTML="";
+ markButton.disabled=true;
+ try{
+  const {data,error}=await supabaseClient.from("notifications")
+   .select("id,actor_id,notification_type,created_at,read_at")
+   .order("created_at",{ascending:false}).limit(50);
+  if(error) throw error;
+  const notifications=data||[];
+  await loadNotificationBadge();
+  if(!notifications.length){
+   message.textContent="You're all caught up. New follower notifications will appear here.";
+   return;
+  }
+  const actorIds=[...new Set(notifications.map(item=>item.actor_id))];
+  const {data:profiles,error:profileError}=await supabaseClient.from("profiles")
+   .select("user_id,username,avatar_url").in("user_id",actorIds);
+  if(profileError) throw profileError;
+  const profileMap=new Map((profiles||[]).map(profile=>[profile.user_id,profile]));
+  const fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Crect width='100%25' height='100%25' fill='%23191629'/%3E%3Ctext x='50%25' y='60%25' text-anchor='middle' font-size='26'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E";
+  list.innerHTML=notifications.map(item=>{
+   const profile=profileMap.get(item.actor_id);
+   const name=profile&&profile.username?"@"+escapeHTML(profile.username):"A SHADOWFLIX member";
+   const avatar=profile&&profile.avatar_url?escapeHTML(profile.avatar_url):fallback;
+   const date=new Date(item.created_at).toLocaleString();
+   const unread=!item.read_at;
+   return `<div class="notification-item ${unread?"unread":""}"><img class="community-avatar" src="${avatar}" alt="Profile picture" onerror="this.src='${fallback}'"><div class="notification-copy"><strong>${name}</strong> followed you.<small>${escapeHTML(date)}${unread?" · Unread":" · Read"}</small></div>${unread?`<button class="secondary" onclick="markNotificationRead(${Number(item.id)})">Mark read</button>`:""}</div>`;
+  }).join("");
+  message.textContent=notifications.length+" recent notification"+(notifications.length===1?"":"s")+".";
+  markButton.disabled=!notifications.some(item=>!item.read_at);
+ }catch(error){
+  console.error("Notifications error:",error);
+  message.textContent="Could not load notifications: "+error.message;
+ }finally{
+  if(!list.innerHTML)markButton.disabled=true;
+ }
+}
+
+async function markNotificationRead(id){
+ if(!currentUser)return;
+ try{
+  const {error}=await supabaseClient.from("notifications")
+   .update({read_at:new Date().toISOString()}).eq("id",id).is("read_at",null);
+  if(error)throw error;
+  await loadNotifications();
+ }catch(error){
+  document.getElementById("notificationsMessage").textContent="Could not mark notification as read: "+error.message;
+ }
+}
+
+async function markAllNotificationsRead(){
+ if(!currentUser)return;
+ const button=document.getElementById("markAllReadButton");
+ button.disabled=true;
+ try{
+  const {error}=await supabaseClient.from("notifications")
+   .update({read_at:new Date().toISOString()}).is("read_at",null);
+  if(error)throw error;
+  await loadNotifications();
+ }catch(error){
+  document.getElementById("notificationsMessage").textContent="Could not mark notifications as read: "+error.message;
+  button.disabled=false;
+ }
+}
+
+// --------------------------------------------------
+// 12. PAGE NAVIGATION
 // --------------------------------------------------
 
 function showPage(page,button){
@@ -1242,7 +1377,7 @@ window.scrollTo({top:0,behavior:"smooth"});
 }
 
 // --------------------------------------------------
-// 12. START THE APP
+// 13. START THE APP
 // --------------------------------------------------
 
 async function startApp(){
@@ -1291,6 +1426,7 @@ document.addEventListener("keydown",event=>{
 if(event.key==="Escape"){
 closeModal();
 closeProfiles();
+closeNotifications();
 }
 });
 
