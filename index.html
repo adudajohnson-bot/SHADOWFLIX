@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080711">
-<title>SHADOWFLIX 6.0 | Discover Movies</title>
+<title>SHADOWFLIX 7.0 | Discover Movies</title>
 
 <style>
 *{box-sizing:border-box}
@@ -88,6 +88,7 @@ select option{background:#171426}
 .community-card{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid #ffffff18;border-radius:12px;padding:15px;min-width:0}
 .community-avatar{width:58px;height:58px;flex:0 0 58px;border-radius:50%;object-fit:cover;background:var(--panel2);border:1px solid #ffffff25}
 .community-card strong{overflow-wrap:anywhere}
+.community-card .profile-view-button{margin-left:auto;white-space:nowrap;flex:0 0 auto}
 .community-hint{font-size:13px;color:var(--muted);line-height:1.6}
 .profile-form input{padding:12px;background:var(--panel2);border:1px solid #ffffff25;color:white;border-radius:8px}
 .auth-panel{margin-top:25px;padding:20px;background:var(--panel);border:1px solid #ffffff20;border-radius:12px}
@@ -233,7 +234,7 @@ main{padding:20px 4% 50px}
 </main>
 
 <footer>
-SHADOWFLIX 6.0 · Discover. Explore. Connect.<br><br>
+SHADOWFLIX 7.0 · Discover. Explore. Connect.<br><br>
 Movie information provided by TMDB.
 </footer>
 
@@ -307,6 +308,18 @@ Movie information provided by TMDB.
 </div>
 </div>
 </div>
+</div>
+
+<div class="modal" id="publicProfileModal" onclick="if(event.target===this)closePublicProfile()">
+ <div class="modal-box">
+  <div class="modal-body">
+   <button class="close" onclick="closePublicProfile()">×</button>
+   <h2>SHADOWFLIX Member</h2>
+   <img id="publicProfileAvatar" class="account-avatar" alt="Public profile picture">
+   <h3 id="publicProfileUsername"></h3>
+   <p class="muted">Public member profile</p>
+  </div>
+ </div>
 </div>
 
 <!-- Supabase library -->
@@ -1062,7 +1075,7 @@ async function searchCommunityProfiles(){
   // Only public profile fields are requested; emails and watchlists are never queried.
   const {data,error}=await supabaseClient
    .from("profiles")
-   .select("username,avatar_url")
+   .select("user_id,username,avatar_url")
    .ilike("username","%"+query+"%")
    .order("username",{ascending:true})
    .limit(24);
@@ -1076,12 +1089,54 @@ async function searchCommunityProfiles(){
   const fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='58' height='58'%3E%3Crect width='100%25' height='100%25' fill='%23191629'/%3E%3Ctext x='50%25' y='60%25' text-anchor='middle' font-size='30'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E";
   results.innerHTML=profiles.map(profile=>{
    const avatar=profile.avatar_url ? escapeHTML(profile.avatar_url) : fallback;
-   return `<div class="community-card"><img class="community-avatar" src="${avatar}" alt="Profile picture" loading="lazy" onerror="this.src='${fallback}'"><div><strong>@${escapeHTML(profile.username)}</strong><p class="community-hint">SHADOWFLIX member</p></div></div>`;
+   return `<div class="community-card"><img class="community-avatar" src="${avatar}" alt="Profile picture" loading="lazy" onerror="this.src='${fallback}'"><div><strong>@${escapeHTML(profile.username)}</strong><p class="community-hint">SHADOWFLIX member</p></div><button class="secondary profile-view-button" onclick="viewPublicProfile('${escapeHTML(profile.user_id)}')">View Profile</button></div>`;
   }).join("");
  }catch(error){
   console.error("Community search error:",error);
   message.textContent="Could not search profiles: "+error.message;
  }
+}
+
+
+async function viewPublicProfile(userId){
+ const modal=document.getElementById("publicProfileModal");
+ const username=document.getElementById("publicProfileUsername");
+ const avatar=document.getElementById("publicProfileAvatar");
+ const fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='76' height='76'%3E%3Crect width='100%25' height='100%25' fill='%23191629'/%3E%3Ctext x='50%25' y='60%25' text-anchor='middle' font-size='38'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E";
+
+ if(!currentUser){
+  alert("Please sign in to view public profiles.");
+  return;
+ }
+
+ username.textContent="Loading profile...";
+ avatar.src=fallback;
+ modal.style.display="block";
+
+ try{
+  const {data,error}=await supabaseClient
+   .from("profiles")
+   .select("username,avatar_url")
+   .eq("user_id",userId)
+   .maybeSingle();
+
+  if(error) throw error;
+  if(!data || !data.username){
+   username.textContent="Profile not found.";
+   return;
+  }
+
+  username.textContent="@"+data.username;
+  avatar.src=data.avatar_url || fallback;
+  avatar.onerror=()=>{avatar.src=fallback;};
+ }catch(error){
+  console.error("Public profile error:",error);
+  username.textContent="Could not load this profile.";
+ }
+}
+
+function closePublicProfile(){
+ document.getElementById("publicProfileModal").style.display="none";
 }
 
 // --------------------------------------------------
