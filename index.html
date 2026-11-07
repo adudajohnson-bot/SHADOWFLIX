@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080711">
-<title>SHADOWFLIX 14.0 | Discover Movies</title>
+<title>SHADOWFLIX 15.0 | Discover Movies</title>
 
 <style>
 *{box-sizing:border-box}
@@ -130,6 +130,10 @@ select option{background:#171426}
 .chat-bubble{max-width:82%;padding:11px 13px;border-radius:13px;background:var(--panel2);align-self:flex-start;overflow-wrap:anywhere;line-height:1.5}
 .chat-bubble.mine{align-self:flex-end;background:#51328d}.chat-bubble small{display:block;color:#d3c7e8;font-size:10px;margin-top:5px}.message-receipt{margin-left:7px;font-weight:700;color:#d8c7ff}.message-receipt.read{color:#86efac}
 .message-compose{display:flex;gap:9px}.message-compose input{flex:1;min-width:0;background:var(--panel2);border:1px solid #ffffff25;color:white;border-radius:9px;padding:12px}.message-compose button{margin:0}
+.reaction-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.reaction-button{border:1px solid #ffffff25;background:#ffffff0b;color:white;border-radius:18px;padding:4px 8px;font-size:12px;min-width:34px}
+.reaction-button.selected{border-color:#a78bfa;background:#8b5cf633;color:#fff}
+.reaction-button:disabled{opacity:.55;cursor:default}
 @media(max-width:700px){.messages-layout{grid-template-columns:1fr}.chat-messages{height:300px}nav{overflow-x:auto}}
 
 footer{border-top:1px solid #ffffff15;padding:30px 6%;text-align:center;color:var(--muted);font-size:13px}
@@ -300,7 +304,7 @@ main{padding:20px 4% 50px}
 </main>
 
 <footer>
-SHADOWFLIX 14.0 · Discover. Explore. Connect.<br><br>
+SHADOWFLIX 15.0 · Discover. Explore. Connect.<br><br>
 Movie information provided by TMDB.
 </footer>
 
@@ -441,6 +445,7 @@ let activeMessageUsername = "";
 let messageConversations = [];
 let messageRealtimeChannel = null;
 let messageRefreshTimer = null;
+let reactionRealtimeChannel = null;
 let typingRealtimeChannel = null;
 let typingStopTimer = null;
 let typingRemoteTimer = null;
@@ -1594,6 +1599,15 @@ function subscribeToMessageRealtime(otherUserId){
     if(activeMessageUserId===otherUserId){loadDirectMessages();loadMessagesInbox();}
    },180);
   })
+  .on("postgres_changes",{event:"*",schema:"public",table:"message_reactions"},payload=>{
+   const row=payload.new||payload.old||{};
+   if(!row.message_id)return;
+   if(messageRefreshTimer)clearTimeout(messageRefreshTimer);
+   messageRefreshTimer=setTimeout(()=>{
+    messageRefreshTimer=null;
+    if(activeMessageUserId===otherUserId)loadDirectMessages();
+   },180);
+  })
   .subscribe(status=>{
    if(activeMessageUserId!==otherUserId)return;
    if(status==="SUBSCRIBED")state.textContent="● Live updates on";
@@ -1723,15 +1737,55 @@ async function loadDirectMessages(){
   }
   if(!data?.length){box.innerHTML='<div class="empty">This is the beginning of your conversation. Say hello!</div>';}
   else{
+   const messageIds=data.map(m=>m.id);
+   const {data:reactionRows,error:reactionError}=await supabaseClient.from("message_reactions")
+    .select("message_id,user_id,emoji").in("message_id",messageIds);
+   if(reactionError)throw reactionError;
+   const reactionMap=new Map();
+   (reactionRows||[]).forEach(r=>{
+    if(!reactionMap.has(r.message_id))reactionMap.set(r.message_id,[]);
+    reactionMap.get(r.message_id).push(r);
+   });
+   const emojiChoices=["❤️","😂","👍","🔥"];
    box.innerHTML=data.map(m=>{
     const mine=m.sender_id===currentUser.id;
     const receipt=mine?`<span class="message-receipt ${m.read_at?'read':''}">${m.read_at?'✓✓ Read':'✓ Sent'}</span>`:"";
-    return `<div class="chat-bubble ${mine?'mine':''}">${escapeHTML(m.message)}<small>${new Date(m.created_at).toLocaleString()}${receipt}</small></div>`;
+    const reactions=reactionMap.get(m.id)||[];
+    const reactionButtons=emojiChoices.map(emoji=>{
+     const matching=reactions.filter(r=>r.emoji===emoji);
+     const selected=matching.some(r=>r.user_id===currentUser.id);
+     return `<button type="button" class="reaction-button ${selected?'selected':''}" onclick="toggleMessageReaction(${m.id},'${emoji}')" aria-label="React with ${emoji}" title="React with ${emoji}">${emoji} ${matching.length||''}</button>`;
+    }).join("");
+    return `<div class="chat-bubble ${mine?'mine':''}">${escapeHTML(m.message)}<small>${new Date(m.created_at).toLocaleString()}${receipt}</small><div class="reaction-row">${reactionButtons}</div></div>`;
    }).join("");
    box.scrollTop=box.scrollHeight;
   }
   await loadMessageBadge();
  }catch(error){box.innerHTML=`<div class="empty">Could not load messages: ${escapeHTML(error.message)}</div>`;}
+}
+
+async function toggleMessageReaction(messageId,emoji){
+ if(!currentUser||!activeMessageUserId)return;
+ const allowed=["❤️","😂","👍","🔥"];
+ if(!allowed.includes(emoji))return;
+ try{
+  const {data:existing,error:findError}=await supabaseClient.from("message_reactions")
+   .select("id,emoji").eq("message_id",messageId).eq("user_id",currentUser.id).maybeSingle();
+  if(findError)throw findError;
+  if(existing&&existing.emoji===emoji){
+   const {error}=await supabaseClient.from("message_reactions").delete().eq("id",existing.id);
+   if(error)throw error;
+  }else if(existing){
+   const {error}=await supabaseClient.from("message_reactions").update({emoji}).eq("id",existing.id);
+   if(error)throw error;
+  }else{
+   const {error}=await supabaseClient.from("message_reactions").insert({message_id:messageId,user_id:currentUser.id,emoji});
+   if(error)throw error;
+  }
+  await loadDirectMessages();
+ }catch(error){
+  document.getElementById("chatStatus").textContent="Could not save reaction: "+error.message;
+ }
 }
 
 async function sendDirectMessage(event){
