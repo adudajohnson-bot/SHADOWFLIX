@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080711">
-<title>SHADOWFLIX 12.0 | Discover Movies</title>
+<title>SHADOWFLIX 13.0 | Discover Movies</title>
 
 <style>
 *{box-sizing:border-box}
@@ -276,7 +276,8 @@ main{padding:20px 4% 50px}
   <div class="messages-layout">
    <section class="conversation-panel"><h3>Your conversations</h3><div id="conversationList"><div class="empty">Loading conversations...</div></div></section>
    <section class="chat-panel"><div id="chatHeader" class="chat-header"><span>Choose a conversation <small id="chatPresenceState" class="member-presence offline"></small></span><span class="chat-live-state" id="chatLiveState">Live updates idle</span></div><div id="chatMessages" class="chat-messages"><div class="empty">Select a member to view your messages.</div></div>
-    <form class="message-compose" onsubmit="sendDirectMessage(event)"><input id="messageComposer" maxlength="2000" placeholder="Write a message..." autocomplete="off" disabled><button class="primary" id="sendMessageButton" type="submit" disabled>Send</button></form>
+    <p class="community-hint" id="typingStatus" aria-live="polite"></p>
+    <form class="message-compose" onsubmit="sendDirectMessage(event)"><input id="messageComposer" maxlength="2000" placeholder="Write a message..." autocomplete="off" oninput="handleMessageTyping()" onblur="stopTypingSignal()" disabled><button class="primary" id="sendMessageButton" type="submit" disabled>Send</button></form>
     <p class="community-hint" id="chatStatus">Only you and the recipient can read messages in this conversation.</p>
    </section>
   </div>
@@ -299,7 +300,7 @@ main{padding:20px 4% 50px}
 </main>
 
 <footer>
-SHADOWFLIX 12.0 · Discover. Explore. Connect.<br><br>
+SHADOWFLIX 13.0 · Discover. Explore. Connect.<br><br>
 Movie information provided by TMDB.
 </footer>
 
@@ -440,6 +441,10 @@ let activeMessageUsername = "";
 let messageConversations = [];
 let messageRealtimeChannel = null;
 let messageRefreshTimer = null;
+let typingRealtimeChannel = null;
+let typingStopTimer = null;
+let typingRemoteTimer = null;
+let lastTypingBroadcast = 0;
 let presenceChannel = null;
 let onlineUserIds = new Set();
 
@@ -1072,6 +1077,7 @@ return;
 }
 
 currentUser=null;
+stopTypingRealtime();
 await stopPresence();
 cloudWatchlist=[];
 onlineProfile=null;
@@ -1585,9 +1591,95 @@ function subscribeToMessageRealtime(otherUserId){
   });
 }
 
+// --------------------------------------------------
+// 12. REAL-TIME TYPING INDICATOR
+// --------------------------------------------------
+
+function setTypingStatus(message){
+ const status=document.getElementById("typingStatus");
+ if(status)status.textContent=message||"";
+}
+
+function sendTypingBroadcast(isTyping){
+ if(!typingRealtimeChannel)return;
+ const username=onlineProfile?.username||"A SHADOWFLIX member";
+ typingRealtimeChannel.send({
+  type:"broadcast",
+  event:"typing",
+  payload:{user_id:currentUser?.id,username,typing:Boolean(isTyping)}
+ }).catch(error=>console.warn("Typing update failed:",error.message));
+}
+
+function stopTypingSignal(){
+ if(typingStopTimer){clearTimeout(typingStopTimer);typingStopTimer=null;}
+ if(typingRealtimeChannel&&currentUser)sendTypingBroadcast(false);
+}
+
+function handleMessageTyping(){
+ const input=document.getElementById("messageComposer");
+ if(!currentUser||!activeMessageUserId||!typingRealtimeChannel||!input)return;
+ if(!input.value.trim()){
+  stopTypingSignal();
+  return;
+ }
+ const now=Date.now();
+ if(now-lastTypingBroadcast>700){
+  sendTypingBroadcast(true);
+  lastTypingBroadcast=now;
+ }
+ if(typingStopTimer)clearTimeout(typingStopTimer);
+ typingStopTimer=setTimeout(()=>{
+  typingStopTimer=null;
+  sendTypingBroadcast(false);
+ },1800);
+}
+
+function stopTypingRealtime(){
+ if(typingStopTimer){clearTimeout(typingStopTimer);typingStopTimer=null;}
+ if(typingRemoteTimer){clearTimeout(typingRemoteTimer);typingRemoteTimer=null;}
+ if(typingRealtimeChannel&&supabaseClient){
+  const oldChannel=typingRealtimeChannel;
+  typingRealtimeChannel=null;
+  supabaseClient.removeChannel(oldChannel);
+ }else{
+  typingRealtimeChannel=null;
+ }
+ lastTypingBroadcast=0;
+ setTypingStatus("");
+}
+
+function subscribeToTypingRealtime(otherUserId){
+ stopTypingRealtime();
+ if(!currentUser||!otherUserId||!supabaseClient)return;
+ const ids=[currentUser.id,otherUserId].sort();
+ const channel=supabaseClient.channel("shadowflix-typing-"+ids.join("-"));
+ typingRealtimeChannel=channel;
+ channel
+  .on("broadcast",{event:"typing"},({payload})=>{
+   if(!payload||payload.user_id!==otherUserId)return;
+   if(typingRemoteTimer){clearTimeout(typingRemoteTimer);typingRemoteTimer=null;}
+   if(payload.typing){
+    setTypingStatus("@"+(payload.username||activeMessageUsername)+" is typing...");
+    typingRemoteTimer=setTimeout(()=>{
+     typingRemoteTimer=null;
+     setTypingStatus("");
+    },2200);
+   }else{
+    setTypingStatus("");
+   }
+  })
+  .subscribe(status=>{
+   if(typingRealtimeChannel!==channel)return;
+   if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"){
+    console.warn("Typing indicator channel unavailable:",status);
+   }
+  });
+}
+
 async function openDirectConversation(userId,username){
  if(!currentUser){openProfiles();return;}
  if(userId===currentUser.id)return;
+ stopTypingRealtime();
  activeMessageUserId=userId;activeMessageUsername=username;
  document.getElementById("chatHeader").querySelector("span").childNodes[0].textContent="@"+username+" ";
  const presenceLabel=document.getElementById("chatPresenceState");
@@ -1599,6 +1691,7 @@ async function openDirectConversation(userId,username){
  document.getElementById("sendMessageButton").disabled=false;
  document.getElementById("chatStatus").textContent="Only you and @"+username+" can read this conversation.";
  subscribeToMessageRealtime(userId);
+ subscribeToTypingRealtime(userId);
  await loadDirectMessages();
  await loadMessagesInbox();
 }
@@ -1637,6 +1730,7 @@ async function sendDirectMessage(event){
   const {error}=await supabaseClient.from("direct_messages").insert({sender_id:currentUser.id,recipient_id:activeMessageUserId,message});
   if(error)throw error;
   input.value="";
+  stopTypingSignal();
   await loadDirectMessages();
   await loadMessagesInbox();
  }catch(error){document.getElementById("chatStatus").textContent="Message not sent: "+error.message;}
@@ -1661,6 +1755,7 @@ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"))
 
 if(button)button.classList.add("active");
 
+if(page!=="messages")stopTypingRealtime();
 if(page==="watchlist")renderWatchlist();
 if(page==="community")updateCommunityAccess();
 if(page==="messages")loadMessagesInbox();
