@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080711">
-<title>SHADOWFLIX 11.0 | Discover Movies</title>
+<title>SHADOWFLIX 12.0 | Discover Movies</title>
 
 <style>
 *{box-sizing:border-box}
@@ -90,6 +90,9 @@ select option{background:#171426}
 .community-card strong{overflow-wrap:anywhere}
 .community-card .profile-view-button{margin-left:auto;white-space:nowrap;flex:0 0 auto}
 .community-hint{font-size:13px;color:var(--muted);line-height:1.6}
+.member-presence{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;margin-top:5px}
+.member-presence.online{color:#4ade80}.member-presence.offline{color:#a8a3b8}
+.presence-note{font-size:12px;color:var(--muted);margin:8px 0 14px}
 .profile-form input{padding:12px;background:var(--panel2);border:1px solid #ffffff25;color:white;border-radius:8px}
 .auth-panel{margin-top:25px;padding:20px;background:var(--panel);border:1px solid #ffffff20;border-radius:12px}
 .auth-panel h3{margin-top:0}
@@ -263,6 +266,7 @@ main{padding:20px 4% 50px}
  <div class="section-head"><h2>💬 SHADOWFLIX Messages</h2><button class="secondary" onclick="loadMessagesInbox()">Refresh</button></div>
  <div id="messagesSignIn" class="auth-panel hidden"><strong>Sign in to use private messages.</strong><p class="community-hint">Your conversations are only visible to their participants.</p><button class="primary" onclick="openProfiles()">Sign in / Create account</button></div>
  <div id="messagesWorkspace" class="hidden">
+  <p class="presence-note">Your online status is shared with other SHADOWFLIX members while you are connected.</p>
   <div class="messages-start">
    <input id="messageUserSearch" class="auth-input" maxlength="20" placeholder="Find a member by username..." onkeydown="if(event.key==='Enter')searchMessageUsers()">
    <button class="primary" onclick="searchMessageUsers()">Find member</button>
@@ -271,7 +275,7 @@ main{padding:20px 4% 50px}
   <div id="messageUserResults" class="movie-grid"></div>
   <div class="messages-layout">
    <section class="conversation-panel"><h3>Your conversations</h3><div id="conversationList"><div class="empty">Loading conversations...</div></div></section>
-   <section class="chat-panel"><div id="chatHeader" class="chat-header"><span>Choose a conversation</span><span class="chat-live-state" id="chatLiveState">Live updates idle</span></div><div id="chatMessages" class="chat-messages"><div class="empty">Select a member to view your messages.</div></div>
+   <section class="chat-panel"><div id="chatHeader" class="chat-header"><span>Choose a conversation <small id="chatPresenceState" class="member-presence offline"></small></span><span class="chat-live-state" id="chatLiveState">Live updates idle</span></div><div id="chatMessages" class="chat-messages"><div class="empty">Select a member to view your messages.</div></div>
     <form class="message-compose" onsubmit="sendDirectMessage(event)"><input id="messageComposer" maxlength="2000" placeholder="Write a message..." autocomplete="off" disabled><button class="primary" id="sendMessageButton" type="submit" disabled>Send</button></form>
     <p class="community-hint" id="chatStatus">Only you and the recipient can read messages in this conversation.</p>
    </section>
@@ -295,7 +299,7 @@ main{padding:20px 4% 50px}
 </main>
 
 <footer>
-SHADOWFLIX 11.0 · Discover. Explore. Connect.<br><br>
+SHADOWFLIX 12.0 · Discover. Explore. Connect.<br><br>
 Movie information provided by TMDB.
 </footer>
 
@@ -436,6 +440,8 @@ let activeMessageUsername = "";
 let messageConversations = [];
 let messageRealtimeChannel = null;
 let messageRefreshTimer = null;
+let presenceChannel = null;
+let onlineUserIds = new Set();
 
 // --------------------------------------------------
 // 2. CONNECT TO SUPABASE
@@ -932,6 +938,62 @@ loadRecommendations();
 }
 
 // --------------------------------------------------
+// 8. REAL-TIME MEMBER PRESENCE
+// --------------------------------------------------
+
+function refreshPresenceLabels(){
+ document.querySelectorAll(".member-presence[data-user-id]").forEach(label=>{
+  const online=onlineUserIds.has(label.dataset.userId);
+  label.textContent=online?"● Online":"○ Offline";
+  label.classList.toggle("online",online);
+  label.classList.toggle("offline",!online);
+ });
+}
+
+function updatePresenceFromChannel(){
+ if(!presenceChannel){onlineUserIds=new Set();refreshPresenceLabels();return;}
+ const state=presenceChannel.presenceState();
+ const next=new Set();
+ Object.values(state).flat().forEach(member=>{
+  if(member && member.user_id)next.add(member.user_id);
+ });
+ onlineUserIds=next;
+ refreshPresenceLabels();
+}
+
+async function stopPresence(){
+ const channel=presenceChannel;
+ presenceChannel=null;
+ onlineUserIds=new Set();
+ refreshPresenceLabels();
+ if(channel && supabaseClient){
+  try{await supabaseClient.removeChannel(channel);}catch(error){console.warn("Presence disconnect:",error.message);}
+ }
+}
+
+async function startPresence(){
+ if(!currentUser || !supabaseClient)return;
+ if(presenceChannel && presenceChannel.state==="joined")return;
+ await stopPresence();
+ const channel=supabaseClient.channel("shadowflix-member-presence",{
+  config:{presence:{key:currentUser.id}}
+ });
+ presenceChannel=channel;
+ channel
+  .on("presence",{event:"sync"},updatePresenceFromChannel)
+  .on("presence",{event:"join"},updatePresenceFromChannel)
+  .on("presence",{event:"leave"},updatePresenceFromChannel)
+  .subscribe(async status=>{
+   if(presenceChannel!==channel)return;
+   if(status==="SUBSCRIBED"){
+    const {error}=await channel.track({user_id:currentUser.id});
+    if(error)console.warn("Could not publish online status:",error.message);
+    updatePresenceFromChannel();
+   }
+  });
+}
+
+// --------------------------------------------------
 // 8. ACCOUNT REGISTRATION AND LOGIN
 // --------------------------------------------------
 
@@ -1010,6 +1072,7 @@ return;
 }
 
 currentUser=null;
+await stopPresence();
 cloudWatchlist=[];
 onlineProfile=null;
 updateNotificationBadge(0);
@@ -1048,6 +1111,7 @@ currentUser=data.session?.user || null;
 if(currentUser){
 await loadCloudWatchlist();
 await loadUserProfile();
+await startPresence();
 }
 
 updateAccountDisplay();
@@ -1058,6 +1122,7 @@ supabaseClient.auth.onAuthStateChange((event,session)=>{
 currentUser=session?.user || null;
 
 Promise.all([loadCloudWatchlist(),loadUserProfile()]).then(async()=>{
+if(currentUser)await startPresence();else await stopPresence();
 updateAccountDisplay();
 renderWatchlist();
 updateWatchlistButton();
@@ -1183,8 +1248,9 @@ async function searchCommunityProfiles(){
   const fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='58' height='58'%3E%3Crect width='100%25' height='100%25' fill='%23191629'/%3E%3Ctext x='50%25' y='60%25' text-anchor='middle' font-size='30'%3E%F0%9F%8E%AC%3C/text%3E%3C/svg%3E";
   results.innerHTML=profiles.map(profile=>{
    const avatar=profile.avatar_url ? escapeHTML(profile.avatar_url) : fallback;
-   return `<div class="community-card"><img class="community-avatar" src="${avatar}" alt="Profile picture" loading="lazy" onerror="this.src='${fallback}'"><div><strong>@${escapeHTML(profile.username)}</strong><p class="community-hint">SHADOWFLIX member</p></div><button class="secondary profile-view-button" onclick="viewPublicProfile('${escapeHTML(profile.user_id)}')">View Profile</button></div>`;
+   return `<div class="community-card"><img class="community-avatar" src="${avatar}" alt="Profile picture" loading="lazy" onerror="this.src='${fallback}'"><div><strong>@${escapeHTML(profile.username)}</strong><p class="community-hint">SHADOWFLIX member</p><span class="member-presence offline" data-user-id="${escapeHTML(profile.user_id)}">○ Offline</span></div><button class="secondary profile-view-button" onclick="viewPublicProfile('${escapeHTML(profile.user_id)}')">View Profile</button></div>`;
   }).join("");
+  refreshPresenceLabels();
  }catch(error){
   console.error("Community search error:",error);
   message.textContent="Could not search profiles: "+error.message;
@@ -1284,8 +1350,9 @@ async function loadMyNetwork(type){
   message.textContent=ordered.length+(type==="followers"?" follower":" followed member")+(ordered.length===1?"":"s")+" found.";
   results.innerHTML=ordered.map(profile=>{
    const avatar=profile.avatar_url?escapeHTML(profile.avatar_url):fallback;
-   return `<div class="community-card"><img class="community-avatar" src="${avatar}" alt="Profile picture" onerror="this.src='${fallback}'"><div><strong>@${escapeHTML(profile.username)}</strong><p class="community-hint">SHADOWFLIX member</p></div><button class="secondary profile-view-button" onclick="viewPublicProfile('${escapeHTML(profile.user_id)}')">View Profile</button></div>`;
+   return `<div class="community-card"><img class="community-avatar" src="${avatar}" alt="Profile picture" onerror="this.src='${fallback}'"><div><strong>@${escapeHTML(profile.username)}</strong><p class="community-hint">SHADOWFLIX member</p><span class="member-presence offline" data-user-id="${escapeHTML(profile.user_id)}">○ Offline</span></div><button class="secondary profile-view-button" onclick="viewPublicProfile('${escapeHTML(profile.user_id)}')">View Profile</button></div>`;
   }).join("");
+  refreshPresenceLabels();
  }catch(error){
   console.error("Network loading error:",error);
   message.textContent="Could not load this list: "+error.message;
@@ -1442,7 +1509,8 @@ async function searchMessageUsers(){
   if(error)throw error;
   if(!data?.length){status.textContent="No members found. Try another username.";return;}
   status.textContent="Select a member to open a private conversation.";
-  results.innerHTML=data.map(profile=>`<div class="community-card"><img class="community-avatar" src="${escapeHTML(profile.avatar_url||"")}" alt="" onerror="this.style.visibility='hidden'"><strong>@${escapeHTML(profile.username||"member")}</strong><button class="secondary profile-view-button" onclick="openDirectConversation('${escapeHTML(profile.user_id)}','${escapeHTML(profile.username||"member")}')">Message</button></div>`).join("");
+  results.innerHTML=data.map(profile=>`<div class="community-card"><img class="community-avatar" src="${escapeHTML(profile.avatar_url||"")}" alt="" onerror="this.style.visibility='hidden'"><div><strong>@${escapeHTML(profile.username||"member")}</strong><span class="member-presence offline" data-user-id="${escapeHTML(profile.user_id)}">○ Offline</span></div><button class="secondary profile-view-button" onclick="openDirectConversation('${escapeHTML(profile.user_id)}','${escapeHTML(profile.username||"member")}')">Message</button></div>`).join("");
+  refreshPresenceLabels();
  }catch(error){status.textContent="Could not search members: "+error.message;}
 }
 
@@ -1475,9 +1543,10 @@ async function loadMessagesInbox(){
    list.innerHTML=ids.map(id=>{
     const row=latest.get(id),profile=profileMap.get(id)||{};
     const unread=(data||[]).some(m=>m.sender_id===id&&m.recipient_id===currentUser.id&&!m.read_at);
-    return `<button class="conversation-item ${activeMessageUserId===id?'selected':''}" onclick="openDirectConversation('${escapeHTML(id)}','${escapeHTML(profile.username||'Member')}')"><img src="${escapeHTML(profile.avatar_url||'')}" alt="" onerror="this.style.visibility='hidden'"><span class="conversation-copy"><strong>@${escapeHTML(profile.username||'Member')} ${unread?'•':''}</strong><small>${escapeHTML(row.message)}</small></span></button>`;
+    return `<button class="conversation-item ${activeMessageUserId===id?'selected':''}" onclick="openDirectConversation('${escapeHTML(id)}','${escapeHTML(profile.username||'Member')}')"><img src="${escapeHTML(profile.avatar_url||'')}" alt="" onerror="this.style.visibility='hidden'"><span class="conversation-copy"><strong>@${escapeHTML(profile.username||'Member')} ${unread?'•':''}</strong><span class="member-presence offline" data-user-id="${escapeHTML(id)}">○ Offline</span><small>${escapeHTML(row.message)}</small></span></button>`;
    }).join("");
   }
+  refreshPresenceLabels();
   await loadMessageBadge();
  }catch(error){list.innerHTML=`<div class="empty">Could not load conversations: ${escapeHTML(error.message)}</div>`;}
 }
@@ -1520,7 +1589,12 @@ async function openDirectConversation(userId,username){
  if(!currentUser){openProfiles();return;}
  if(userId===currentUser.id)return;
  activeMessageUserId=userId;activeMessageUsername=username;
- document.getElementById("chatHeader").querySelector("span").textContent="@"+username;
+ document.getElementById("chatHeader").querySelector("span").childNodes[0].textContent="@"+username+" ";
+ const presenceLabel=document.getElementById("chatPresenceState");
+ presenceLabel.dataset.userId=userId;
+ presenceLabel.textContent=onlineUserIds.has(userId)?"● Online":"○ Offline";
+ presenceLabel.classList.toggle("online",onlineUserIds.has(userId));
+ presenceLabel.classList.toggle("offline",!onlineUserIds.has(userId));
  document.getElementById("messageComposer").disabled=false;
  document.getElementById("sendMessageButton").disabled=false;
  document.getElementById("chatStatus").textContent="Only you and @"+username+" can read this conversation.";
