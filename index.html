@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080711">
-<title>SHADOWFLIX 17.0 | Discover Movies</title>
+<title>SHADOWFLIX 18.0 | Discover Movies</title>
 
 <style>
 *{box-sizing:border-box}
@@ -89,6 +89,21 @@ select option{background:#171426}
 .cast-card img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:#252039}
 .cast-card strong{display:block;font-size:12px;padding:8px 6px 2px}
 .cast-card small{display:block;color:var(--muted);font-size:11px;padding:0 6px 9px;line-height:1.4}
+
+
+.review-summary{background:var(--panel2);border:1px solid #ffffff18;border-radius:12px;padding:16px;margin:14px 0;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.review-average{font-size:34px;font-weight:900;color:#fbbf24}
+.review-stars{color:#fbbf24;letter-spacing:2px;font-size:20px}
+.review-form{background:var(--panel);border:1px solid #ffffff20;border-radius:12px;padding:16px;margin:16px 0}
+.review-form textarea{display:block;width:100%;min-height:100px;resize:vertical;margin:12px 0;padding:12px;background:var(--panel2);border:1px solid #ffffff25;color:white;border-radius:9px;font:inherit}
+.review-rating-picker{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+.review-rating-picker button{background:var(--panel2);border:1px solid #ffffff25;color:#8b849b;border-radius:8px;padding:8px 11px;font-size:19px}
+.review-rating-picker button.selected{color:#fbbf24;border-color:#fbbf24;background:#fbbf2418}
+.review-item{background:var(--panel);border:1px solid #ffffff18;border-radius:11px;padding:15px;margin:11px 0}
+.review-item-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+.review-item p{line-height:1.65;overflow-wrap:anywhere}
+.review-actions{display:flex;gap:8px;flex-wrap:wrap}
+.review-actions button{padding:7px 11px}
 
 .profile-grid{display:flex;gap:15px;flex-wrap:wrap}
 .profile{background:var(--panel2);padding:20px;border-radius:12px;border:1px solid #ffffff20;min-width:130px;text-align:center;cursor:pointer}
@@ -275,7 +290,7 @@ main{padding:20px 4% 50px}
 </main>
 
 <footer>
-SHADOWFLIX 17.0 · Discover. Explore. Connect.<br><br>
+SHADOWFLIX 18.0 · Discover. Explore. Connect.<br><br>
 Movie information provided by TMDB.
 </footer>
 
@@ -308,6 +323,29 @@ Movie information provided by TMDB.
 <div id="castArea" class="cast-grid"><p class="muted">Loading cast...</p></div>
 <p class="muted" id="directorArea"></p>
 </div>
+<div class="section" id="movieReviewsSection">
+<h3>⭐ SHADOWFLIX Member Reviews</h3>
+<p class="muted">Rate this movie and share your opinion with the community.</p>
+<div class="review-summary" id="reviewSummary"><div class="review-average">—</div><div><div class="review-stars">☆☆☆☆☆</div><div class="muted">Loading member ratings...</div></div></div>
+<div class="review-form" id="reviewFormArea">
+<p class="muted" id="reviewFormMessage">Sign in to write a review.</p>
+<div id="reviewEditor" class="hidden">
+<strong>Your rating</strong>
+<div class="review-rating-picker" id="reviewRatingPicker">
+<button type="button" onclick="setReviewRating(1)" aria-label="1 star">★</button>
+<button type="button" onclick="setReviewRating(2)" aria-label="2 stars">★</button>
+<button type="button" onclick="setReviewRating(3)" aria-label="3 stars">★</button>
+<button type="button" onclick="setReviewRating(4)" aria-label="4 stars">★</button>
+<button type="button" onclick="setReviewRating(5)" aria-label="5 stars">★</button>
+</div>
+<textarea id="movieReviewText" maxlength="1000" placeholder="What did you think of this movie? (3–1000 characters)"></textarea>
+<button class="primary" id="saveReviewButton" onclick="saveMovieReview()">Post review</button>
+<button class="secondary hidden" id="cancelReviewButton" onclick="cancelReviewEdit()">Cancel edit</button>
+</div>
+</div>
+<div id="movieReviewsList"><p class="muted">Loading reviews...</p></div>
+</div>
+
 <div class="section">
 <h3>Similar Movies</h3>
 <div class="movie-grid" id="similarGrid"></div>
@@ -421,6 +459,9 @@ let currentPage = "discover";
 let viewedProfileId = null;
 let viewedProfileUsername = "";
 let notificationRefreshTimer = null;
+let selectedReviewRating = 0;
+let editingReviewId = null;
+let loadedMovieReviews = [];
 
 // --------------------------------------------------
 // 2. CONNECT TO SUPABASE
@@ -682,9 +723,146 @@ document.getElementById("trailerArea").innerHTML=trailer
 
 displayMovies("similarGrid",(similar.results || []).slice(0,6));
 document.getElementById("movieModal").style.display="block";
+loadMovieReviews(movie.id);
 
 }catch(error){
 alert(error.message);
+}
+}
+
+
+// --------------------------------------------------
+// 6.5 COMMUNITY MOVIE RATINGS AND REVIEWS
+// --------------------------------------------------
+
+function setReviewRating(value){
+const numeric=Number(value)||0;
+selectedReviewRating=numeric===0?0:Math.max(1,Math.min(5,numeric));
+const buttons=document.querySelectorAll("#reviewRatingPicker button");
+buttons.forEach((button,index)=>button.classList.toggle("selected",index<selectedReviewRating));
+}
+
+function resetReviewEditor(){
+selectedReviewRating=0;
+editingReviewId=null;
+setReviewRating(0);
+document.getElementById("movieReviewText").value="";
+document.getElementById("saveReviewButton").textContent="Post review";
+document.getElementById("cancelReviewButton").classList.add("hidden");
+}
+
+function cancelReviewEdit(){
+resetReviewEditor();
+document.getElementById("reviewFormMessage").textContent="Your review was not changed.";
+}
+
+async function loadMovieReviews(movieId){
+const summary=document.getElementById("reviewSummary");
+const list=document.getElementById("movieReviewsList");
+const formMessage=document.getElementById("reviewFormMessage");
+const editor=document.getElementById("reviewEditor");
+loadedMovieReviews=[];
+resetReviewEditor();
+editor.classList.toggle("hidden",!currentUser);
+formMessage.textContent=currentUser
+? "Choose 1–5 stars and write a short review. You can edit or delete your own review."
+: "Sign in to rate this movie and write a review.";
+if(!supabaseClient){
+summary.innerHTML='<div class="muted">Member ratings are unavailable right now.</div>';
+list.innerHTML="";
+return;
+}
+try{
+const {data,error}=await supabaseClient.from("movie_reviews")
+.select("id,movie_id,user_id,username,rating,review_text,created_at")
+.eq("movie_id",Number(movieId)).order("created_at",{ascending:false}).limit(50);
+if(error)throw error;
+if(!currentMovie || Number(currentMovie.id)!==Number(movieId))return;
+loadedMovieReviews=data||[];
+const count=loadedMovieReviews.length;
+const average=count?loadedMovieReviews.reduce((sum,item)=>sum+Number(item.rating||0),0)/count:0;
+const rounded=Math.round(average);
+summary.innerHTML=`<div class="review-average">${count?average.toFixed(1):"—"}<small style="display:block;font-size:12px;color:var(--muted);font-weight:normal">out of 5</small></div><div><div class="review-stars">${"★".repeat(rounded)}${"☆".repeat(5-rounded)}</div><div class="muted">${count} member ${count===1?"review":"reviews"}</div></div>`;
+const own=currentUser?loadedMovieReviews.find(item=>item.user_id===currentUser.id):null;
+if(own){
+editingReviewId=own.id;
+selectedReviewRating=Number(own.rating)||0;
+document.getElementById("movieReviewText").value=own.review_text||"";
+setReviewRating(selectedReviewRating);
+document.getElementById("saveReviewButton").textContent="Update review";
+document.getElementById("cancelReviewButton").classList.remove("hidden");
+formMessage.textContent="You have already reviewed this movie. You can update your review below.";
+}
+list.innerHTML=count?loadedMovieReviews.map(item=>{
+const isMine=currentUser&&item.user_id===currentUser.id;
+const date=item.created_at?new Date(item.created_at).toLocaleDateString():"";
+return `<article class="review-item">
+<div class="review-item-head"><strong>${escapeHTML(item.username||"SHADOWFLIX member")}</strong><span class="review-stars">${"★".repeat(Number(item.rating)||0)}${"☆".repeat(5-(Number(item.rating)||0))}</span></div>
+<p>${escapeHTML(item.review_text||"")}</p>
+<div class="review-item-head"><small class="muted">${escapeHTML(date)}</small>${isMine?'<div class="review-actions"><button class="secondary" onclick="editMyReview()">Edit</button><button class="secondary" onclick="deleteMyReview()">Delete</button></div>':''}</div>
+</article>`;
+}).join(""):'<div class="empty">No member reviews yet. Be the first to review this movie!</div>';
+}catch(error){
+console.error("Movie reviews error:",error);
+summary.innerHTML='<div class="muted">Could not load member ratings.</div>';
+list.innerHTML='<p class="community-hint">The movie review database may need to be set up in Supabase. Follow the SHADOWFLIX 18.0 setup instructions.</p>';
+formMessage.textContent="Reviews are not ready until the Supabase review table is created.";
+editor.classList.add("hidden");
+}
+}
+
+function editMyReview(){
+const own=loadedMovieReviews.find(item=>currentUser&&item.user_id===currentUser.id);
+if(!own)return;
+editingReviewId=own.id;
+selectedReviewRating=Number(own.rating)||0;
+document.getElementById("movieReviewText").value=own.review_text||"";
+setReviewRating(selectedReviewRating);
+document.getElementById("saveReviewButton").textContent="Update review";
+document.getElementById("cancelReviewButton").classList.remove("hidden");
+document.getElementById("reviewFormMessage").textContent="Editing your review.";
+document.getElementById("movieReviewText").focus();
+}
+
+async function saveMovieReview(){
+if(!currentUser){
+alert("Please sign in to write a review.");
+openProfiles();
+return;
+}
+if(!currentMovie)return;
+const reviewText=document.getElementById("movieReviewText").value.trim();
+const message=document.getElementById("reviewFormMessage");
+const button=document.getElementById("saveReviewButton");
+if(selectedReviewRating<1||selectedReviewRating>5){message.textContent="Choose a rating from 1 to 5 stars.";return;}
+if(reviewText.length<3||reviewText.length>1000){message.textContent="Your review must be between 3 and 1,000 characters.";return;}
+const username=onlineProfile?.username||(currentUser.email?currentUser.email.split("@")[0]:"SHADOWFLIX member");
+button.disabled=true;
+message.textContent="Saving your review...";
+try{
+const record={movie_id:Number(currentMovie.id),movie_title:currentMovie.title,user_id:currentUser.id,username,rating:selectedReviewRating,review_text:reviewText,updated_at:new Date().toISOString()};
+const {error}=await supabaseClient.from("movie_reviews").upsert(record,{onConflict:"movie_id,user_id"});
+if(error)throw error;
+message.textContent="Your review has been saved.";
+await loadMovieReviews(currentMovie.id);
+}catch(error){
+message.textContent="Could not save review: "+error.message;
+}finally{
+button.disabled=false;
+}
+}
+
+async function deleteMyReview(){
+if(!currentUser||!currentMovie)return;
+const own=loadedMovieReviews.find(item=>item.user_id===currentUser.id);
+if(!own)return;
+if(!confirm("Delete your review for this movie?"))return;
+try{
+const {error}=await supabaseClient.from("movie_reviews").delete().eq("id",own.id).eq("user_id",currentUser.id);
+if(error)throw error;
+await loadMovieReviews(currentMovie.id);
+}catch(error){
+alert("Could not delete review: "+error.message);
 }
 }
 
