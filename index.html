@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080711">
-<title>SHADOWFLIX 10.0 | Discover Movies</title>
+<title>SHADOWFLIX 11.0 | Discover Movies</title>
 
 <style>
 *{box-sizing:border-box}
@@ -116,7 +116,13 @@ select option{background:#171426}
 .conversation-item.selected{border-color:var(--purple)}
 .conversation-item img,.message-user-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#29243c;flex:0 0 42px}
 .conversation-copy{min-width:0;flex:1}.conversation-copy strong,.conversation-copy small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.conversation-copy small{color:var(--muted);margin-top:4px}
-.chat-header{font-weight:bold;padding:4px 0 14px;border-bottom:1px solid #ffffff20}
+.chat-header{font-weight:bold;padding:4px 0 14px;border-bottom:1px solid #ffffff20;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.chat-live-state{font-size:11px;font-weight:600;color:#a78bfa;background:#8b5cf620;border:1px solid #8b5cf655;border-radius:20px;padding:5px 9px}
+.chat-panel{box-shadow:0 12px 35px #00000020}
+.chat-bubble{box-shadow:0 3px 12px #00000018}
+.chat-bubble small{opacity:.85}
+.message-compose{padding-top:10px;border-top:1px solid #ffffff15}
+.message-compose button{min-width:76px}
 .chat-messages{height:360px;overflow-y:auto;padding:14px 2px;display:flex;flex-direction:column;gap:10px}
 .chat-bubble{max-width:82%;padding:11px 13px;border-radius:13px;background:var(--panel2);align-self:flex-start;overflow-wrap:anywhere;line-height:1.5}
 .chat-bubble.mine{align-self:flex-end;background:#51328d}.chat-bubble small{display:block;color:#d3c7e8;font-size:10px;margin-top:5px}
@@ -265,7 +271,7 @@ main{padding:20px 4% 50px}
   <div id="messageUserResults" class="movie-grid"></div>
   <div class="messages-layout">
    <section class="conversation-panel"><h3>Your conversations</h3><div id="conversationList"><div class="empty">Loading conversations...</div></div></section>
-   <section class="chat-panel"><div id="chatHeader" class="chat-header">Choose a conversation</div><div id="chatMessages" class="chat-messages"><div class="empty">Select a member to view your messages.</div></div>
+   <section class="chat-panel"><div id="chatHeader" class="chat-header"><span>Choose a conversation</span><span class="chat-live-state" id="chatLiveState">Live updates idle</span></div><div id="chatMessages" class="chat-messages"><div class="empty">Select a member to view your messages.</div></div>
     <form class="message-compose" onsubmit="sendDirectMessage(event)"><input id="messageComposer" maxlength="2000" placeholder="Write a message..." autocomplete="off" disabled><button class="primary" id="sendMessageButton" type="submit" disabled>Send</button></form>
     <p class="community-hint" id="chatStatus">Only you and the recipient can read messages in this conversation.</p>
    </section>
@@ -289,7 +295,7 @@ main{padding:20px 4% 50px}
 </main>
 
 <footer>
-SHADOWFLIX 10.0 · Discover. Explore. Connect.<br><br>
+SHADOWFLIX 11.0 · Discover. Explore. Connect.<br><br>
 Movie information provided by TMDB.
 </footer>
 
@@ -428,6 +434,8 @@ let notificationRefreshTimer = null;
 let activeMessageUserId = null;
 let activeMessageUsername = "";
 let messageConversations = [];
+let messageRealtimeChannel = null;
+let messageRefreshTimer = null;
 
 // --------------------------------------------------
 // 2. CONNECT TO SUPABASE
@@ -1441,7 +1449,7 @@ async function searchMessageUsers(){
 async function loadMessagesInbox(){
  const signIn=document.getElementById("messagesSignIn");
  const workspace=document.getElementById("messagesWorkspace");
- if(!currentUser){signIn.classList.remove("hidden");workspace.classList.add("hidden");updateMessageBadge(0);return;}
+ if(!currentUser){stopMessageRealtime();activeMessageUserId=null;signIn.classList.remove("hidden");workspace.classList.add("hidden");updateMessageBadge(0);return;}
  signIn.classList.add("hidden");workspace.classList.remove("hidden");
  const list=document.getElementById("conversationList");
  list.innerHTML='<div class="empty">Loading conversations...</div>';
@@ -1474,14 +1482,49 @@ async function loadMessagesInbox(){
  }catch(error){list.innerHTML=`<div class="empty">Could not load conversations: ${escapeHTML(error.message)}</div>`;}
 }
 
+function stopMessageRealtime(){
+ if(messageRealtimeChannel&&supabaseClient){
+  supabaseClient.removeChannel(messageRealtimeChannel);
+  messageRealtimeChannel=null;
+ }
+ if(messageRefreshTimer){clearTimeout(messageRefreshTimer);messageRefreshTimer=null;}
+}
+
+function subscribeToMessageRealtime(otherUserId){
+ stopMessageRealtime();
+ const state=document.getElementById("chatLiveState");
+ if(!currentUser||!otherUserId||!supabaseClient)return;
+ state.textContent="Connecting live updates…";
+ messageRealtimeChannel=supabaseClient
+  .channel("private-chat-"+currentUser.id+"-"+otherUserId)
+  .on("postgres_changes",{event:"INSERT",schema:"public",table:"direct_messages"},payload=>{
+   const row=payload.new||{};
+   const isThisChat=(row.sender_id===currentUser.id&&row.recipient_id===otherUserId)||
+    (row.sender_id===otherUserId&&row.recipient_id===currentUser.id);
+   if(!isThisChat)return;
+   if(messageRefreshTimer)clearTimeout(messageRefreshTimer);
+   messageRefreshTimer=setTimeout(()=>{
+    messageRefreshTimer=null;
+    if(activeMessageUserId===otherUserId){loadDirectMessages();loadMessagesInbox();}
+   },180);
+  })
+  .subscribe(status=>{
+   if(activeMessageUserId!==otherUserId)return;
+   if(status==="SUBSCRIBED")state.textContent="● Live updates on";
+   else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT")state.textContent="Live updates unavailable · refresh chat";
+   else if(status==="CLOSED")state.textContent="Live updates disconnected";
+  });
+}
+
 async function openDirectConversation(userId,username){
  if(!currentUser){openProfiles();return;}
  if(userId===currentUser.id)return;
  activeMessageUserId=userId;activeMessageUsername=username;
- document.getElementById("chatHeader").textContent="@"+username;
+ document.getElementById("chatHeader").querySelector("span").textContent="@"+username;
  document.getElementById("messageComposer").disabled=false;
  document.getElementById("sendMessageButton").disabled=false;
  document.getElementById("chatStatus").textContent="Only you and @"+username+" can read this conversation.";
+ subscribeToMessageRealtime(userId);
  await loadDirectMessages();
  await loadMessagesInbox();
 }
