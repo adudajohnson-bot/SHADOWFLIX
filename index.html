@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080711">
-<title>SHADOWFLIX 16.0 | Discover Movies</title>
+<title>SHADOWFLIX 17.0 | Discover Movies</title>
 
 <style>
 *{box-sizing:border-box}
@@ -77,6 +77,19 @@ select option{background:#171426}
 .trailer{width:100%;aspect-ratio:16/9;border:0;border-radius:10px}
 .provider-list{display:flex;gap:10px;flex-wrap:wrap}
 .provider{background:var(--panel2);padding:10px 14px;border-radius:8px;color:#ddd}
+
+.movie-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin:18px 0}
+.movie-fact{background:var(--panel2);border:1px solid #ffffff14;border-radius:9px;padding:12px}
+.movie-fact strong{display:block;color:#c4b5fd;font-size:12px;margin-bottom:6px}
+.movie-fact span{font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+.genre-tags{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}
+.genre-tag{background:#8b5cf626;border:1px solid #8b5cf655;color:#ddd6fe;padding:6px 10px;border-radius:20px;font-size:12px}
+.cast-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:12px}
+.cast-card{background:var(--panel2);border:1px solid #ffffff14;border-radius:10px;overflow:hidden;text-align:center}
+.cast-card img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:#252039}
+.cast-card strong{display:block;font-size:12px;padding:8px 6px 2px}
+.cast-card small{display:block;color:var(--muted);font-size:11px;padding:0 6px 9px;line-height:1.4}
+
 .profile-grid{display:flex;gap:15px;flex-wrap:wrap}
 .profile{background:var(--panel2);padding:20px;border-radius:12px;border:1px solid #ffffff20;min-width:130px;text-align:center;cursor:pointer}
 .profile .avatar{font-size:35px}
@@ -262,7 +275,7 @@ main{padding:20px 4% 50px}
 </main>
 
 <footer>
-SHADOWFLIX 16.0 · Discover. Explore. Connect.<br><br>
+SHADOWFLIX 17.0 · Discover. Explore. Connect.<br><br>
 Movie information provided by TMDB.
 </footer>
 
@@ -275,6 +288,10 @@ Movie information provided by TMDB.
 </div>
 <div class="modal-body">
 <p id="modalOverview" class="muted"></p>
+
+<div id="modalGenres" class="genre-tags"></div>
+<div class="movie-facts" id="movieFacts"></div>
+
 <button class="primary" id="watchlistButton" onclick="toggleCurrentMovie()">＋ Add to Watchlist</button>
 <div class="section">
 <h3>Where to watch in Kenya</h3>
@@ -284,6 +301,12 @@ Movie information provided by TMDB.
 <div class="section">
 <h3>Official Trailer</h3>
 <div id="trailerArea" class="muted">Checking for trailer...</div>
+</div>
+
+<div class="section">
+<h3>Main Cast</h3>
+<div id="castArea" class="cast-grid"><p class="muted">Loading cast...</p></div>
+<p class="muted" id="directorArea"></p>
 </div>
 <div class="section">
 <h3>Similar Movies</h3>
@@ -562,11 +585,12 @@ searchMovies();
 
 async function showDetails(id){
 try{
-const [movie,videos,providers,similar]=await Promise.all([
+const [movie,videos,providers,similar,credits]=await Promise.all([
 api("/movie/"+id),
 api("/movie/"+id+"/videos"),
 api("/movie/"+id+"/watch/providers"),
-api("/movie/"+id+"/similar")
+api("/movie/"+id+"/similar"),
+api("/movie/"+id+"/credits")
 ]);
 
 currentMovie=movie;
@@ -578,6 +602,44 @@ document.getElementById("modalMeta").textContent=
 " · "+(movie.runtime ? movie.runtime+" minutes" : "Runtime unavailable");
 
 document.getElementById("modalOverview").textContent=movie.overview || "No description available.";
+
+document.getElementById("modalGenres").innerHTML=(movie.genres || []).length
+? movie.genres.map(g=>`<span class="genre-tag">${escapeHTML(g.name)}</span>`).join("")
+: "";
+
+const languageNames={
+en:"English",sw:"Swahili",fr:"French",es:"Spanish",de:"German",
+ja:"Japanese",ko:"Korean",hi:"Hindi",zh:"Chinese",it:"Italian",
+pt:"Portuguese",ar:"Arabic",ru:"Russian"
+};
+const director=(credits.crew || []).find(person=>person.job==="Director");
+const facts=[
+["Release date",movie.release_date || "Not listed"],
+["Runtime",movie.runtime ? movie.runtime+" minutes" : "Not listed"],
+["Audience rating",Number(movie.vote_average || 0).toFixed(1)+" / 10"],
+["Votes",Number(movie.vote_count || 0).toLocaleString()],
+["Original language",languageNames[movie.original_language] || (movie.original_language || "Not listed").toUpperCase()],
+["Director",director?.name || "Not listed"]
+];
+document.getElementById("movieFacts").innerHTML=facts.map(([label,value])=>
+`<div class="movie-fact"><strong>${escapeHTML(label)}</strong><span>${escapeHTML(value)}</span></div>`
+).join("");
+
+const cast=(credits.cast || []).slice(0,12);
+document.getElementById("castArea").innerHTML=cast.length
+? cast.map(person=>{
+const photo=person.profile_path ? IMG+"w185"+person.profile_path : "";
+return `<div class="cast-card">
+<img src="${photo}" alt="${escapeHTML(person.name)}" loading="lazy"
+onerror="this.style.visibility='hidden';this.style.height='0'">
+<strong>${escapeHTML(person.name)}</strong>
+<small>${escapeHTML(person.character || "Cast")}</small>
+</div>`;
+}).join("")
+: '<p class="muted">Cast information is not currently available.</p>';
+document.getElementById("directorArea").textContent=director
+? "Directed by "+director.name
+: "";
 
 document.getElementById("modalTop").style.backgroundImage=
 `linear-gradient(90deg,#100d1cdd,transparent),linear-gradient(0deg,#151222,transparent),url('${movie.backdrop_path ? IMG+"w1280"+movie.backdrop_path : ""}')`;
