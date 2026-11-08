@@ -215,6 +215,15 @@ main{padding:20px 4% 50px}
 </div>
 </div>
 
+<div class="section" id="recentlyViewedSection">
+<div class="section-head">
+<h2>🕘 Recently Viewed</h2>
+<button class="secondary" type="button" onclick="clearRecentlyViewed()">Clear history</button>
+</div>
+<p class="muted" id="recentlyViewedMessage">Movies you open will appear here on this device.</p>
+<div class="movie-grid" id="recentlyViewedGrid"></div>
+</div>
+
 <div class="section">
 <div class="section-head"><h2>🔥 Trending Movies</h2></div>
 <div class="movie-grid" id="trendingGrid"></div>
@@ -290,7 +299,7 @@ main{padding:20px 4% 50px}
 </main>
 
 <footer>
-SHADOWFLIX 19.0 · Discover. Explore. Connect.<br><br>
+SHADOWFLIX 20.0 · Discover. Explore. Connect.<br><br>
 Movie information provided by TMDB.
 </footer>
 
@@ -535,6 +544,68 @@ document.getElementById(id).innerHTML=movies.length
 }
 
 // --------------------------------------------------
+// 3.5 RECENTLY VIEWED MOVIES (SAVED ON THIS DEVICE)
+// --------------------------------------------------
+
+function recentlyViewedStorageKey(){
+return currentUser
+? "sf_recent_movies_user_"+currentUser.id
+: "sf_recent_movies_profile_"+(getActiveProfile() || "guest");
+}
+
+function getRecentlyViewed(){
+try{
+const saved=JSON.parse(localStorage.getItem(recentlyViewedStorageKey()) || "[]");
+return Array.isArray(saved) ? saved : [];
+}catch(error){
+console.warn("Could not read recently viewed movies:",error);
+return [];
+}
+}
+
+function renderRecentlyViewed(){
+const grid=document.getElementById("recentlyViewedGrid");
+const message=document.getElementById("recentlyViewedMessage");
+if(!grid || !message)return;
+const movies=getRecentlyViewed();
+if(!movies.length){
+grid.innerHTML="";
+message.textContent="Movies you open will appear here on this device.";
+return;
+}
+message.textContent="Your last "+movies.length+" opened movie"+(movies.length===1?"":"s")+". This history is private to this account or local profile on this device.";
+displayMovies("recentlyViewedGrid",movies);
+}
+
+function rememberRecentlyViewed(movie){
+if(!movie || !movie.id)return;
+const compact={
+id:Number(movie.id),
+title:movie.title || "Untitled",
+poster_path:movie.poster_path || null,
+release_date:movie.release_date || "",
+vote_average:Number(movie.vote_average || 0)
+};
+const movies=getRecentlyViewed().filter(item=>Number(item.id)!==compact.id);
+movies.unshift(compact);
+try{
+localStorage.setItem(recentlyViewedStorageKey(),JSON.stringify(movies.slice(0,12)));
+}catch(error){
+console.warn("Could not save recently viewed movie:",error);
+}
+renderRecentlyViewed();
+}
+
+function clearRecentlyViewed(){
+try{
+localStorage.removeItem(recentlyViewedStorageKey());
+renderRecentlyViewed();
+}catch(error){
+alert("Could not clear viewing history. Please try again.");
+}
+}
+
+// --------------------------------------------------
 // 4. MOVIE DISCOVERY
 // --------------------------------------------------
 
@@ -635,6 +706,7 @@ api("/movie/"+id+"/credits")
 ]);
 
 currentMovie=movie;
+rememberRecentlyViewed(movie);
 
 document.getElementById("modalTitle").textContent=movie.title;
 document.getElementById("modalMeta").textContent=
@@ -1648,6 +1720,7 @@ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"))
 if(button)button.classList.add("active");
 
 if(page==="watchlist")renderWatchlist();
+if(page==="discover")renderRecentlyViewed();
 if(page==="community")updateCommunityAccess();
 
 window.scrollTo({top:0,behavior:"smooth"});
@@ -1683,6 +1756,7 @@ document.getElementById("profileName").textContent=active.name;
 await loadGenres();
 await Promise.all([loadHero(),loadCollections()]);
 renderWatchlist();
+renderRecentlyViewed();
 
 }catch(error){
 console.error(error);
