@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080711">
-<title>SHADOWFLIX 19.0 | Discover Movies</title>
+<title>SHADOWFLIX 21.0 | Movies & Watch</title>
 
 <style>
 *{box-sizing:border-box}
@@ -76,7 +76,15 @@ select option{background:#171426}
 .close{float:right;background:#ffffff20;color:white;border:0;border-radius:50%;width:38px;height:38px;font-size:20px}
 .trailer{width:100%;aspect-ratio:16/9;border:0;border-radius:10px}
 .provider-list{display:flex;gap:10px;flex-wrap:wrap}
-.provider{background:var(--panel2);padding:10px 14px;border-radius:8px;color:#ddd}
+ .provider{background:var(--panel2);padding:10px 14px;border-radius:8px;color:#ddd}
+.open-movie-card{background:var(--panel);border:1px solid #ffffff20;border-radius:12px;overflow:hidden;cursor:pointer;transition:.2s}
+.open-movie-card:hover{transform:translateY(-5px);box-shadow:0 12px 35px #0008}
+.open-movie-art{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,#6d28d9,#171126 70%);font-size:54px}
+.open-movie-info{padding:14px}
+.open-movie-info h3{margin:0 0 8px;font-size:16px}
+.open-movie-info p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+.player-video{display:block;width:100%;max-height:70vh;background:#000;border-radius:10px}
+.player-credit{font-size:12px;line-height:1.6;color:var(--muted);margin-top:14px}
 
 .movie-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin:18px 0}
 .movie-fact{background:var(--panel2);border:1px solid #ffffff14;border-radius:9px;padding:12px}
@@ -224,6 +232,24 @@ main{padding:20px 4% 50px}
 <div class="movie-grid" id="recentlyViewedGrid"></div>
 </div>
 
+<div class="section" id="openMoviesSection">
+<div class="section-head">
+<h2>▶️ Free to Watch</h2>
+<span class="muted">Full movies with verified open licences</span>
+</div>
+<div class="movie-grid" id="openMoviesGrid">
+<div class="open-movie-card" role="button" tabindex="0" onclick="playOpenMovie('big-buck-bunny')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();playOpenMovie('big-buck-bunny')}">
+<div class="open-movie-art">🐰</div>
+<div class="open-movie-info">
+<h3>Big Buck Bunny</h3>
+<p>2008 · Animation · 9 min 56 sec<br>Full movie · Creative Commons BY 3.0</p>
+<button class="primary" type="button" onclick="event.stopPropagation();playOpenMovie('big-buck-bunny')">▶ Watch Full Movie</button>
+</div>
+</div>
+</div>
+<p class="muted">This first collection contains films whose owners permit public viewing and reuse under stated licences. More titles can be added after their rights and video sources are checked.</p>
+</div>
+
 <div class="section">
 <div class="section-head"><h2>🔥 Trending Movies</h2></div>
 <div class="movie-grid" id="trendingGrid"></div>
@@ -287,21 +313,35 @@ main{padding:20px 4% 50px}
 <div id="aboutPage" class="hidden">
 <div class="section">
 <h2>About SHADOWFLIX</h2>
-<p class="muted">SHADOWFLIX helps you discover movies, explore ratings, watch official trailers and find legal places to watch.</p>
+<p class="muted">SHADOWFLIX helps you discover movies, explore ratings and watch full movies that are legally available in our Free to Watch collection.</p>
 <h3>Discover</h3>
 <p class="muted">Explore popular, trending and highly rated movies.</p>
 <h3>Personalize</h3>
 <p class="muted">Registered users can access their online watchlists across devices.</p>
 <h3>Watch legally</h3>
-<p class="muted">SHADOWFLIX does not host or distribute movies. Availability depends on licensed streaming providers.</p>
+<p class="muted">The Free to Watch collection uses films shared under licences that permit public viewing. Other movie listings are for discovery and provider availability information; SHADOWFLIX does not provide unauthorised copies.</p>
 </div>
 </div>
 </main>
 
 <footer>
-SHADOWFLIX 20.0 · Discover. Explore. Connect.<br><br>
+SHADOWFLIX 21.0 · Discover. Explore. Watch.<br><br>
 Movie information provided by TMDB.
 </footer>
+
+<div class="modal" id="playerModal" onclick="if(event.target===this)closeOpenMoviePlayer()">
+<div class="modal-box">
+<div class="modal-body">
+<button class="close" type="button" onclick="closeOpenMoviePlayer()">×</button>
+<h2 id="playerTitle">Now Playing</h2>
+<p class="muted" id="playerDescription">A legally shared open movie.</p>
+<video id="openMoviePlayer" class="player-video" controls playsinline preload="metadata">
+Your browser does not support HTML video.
+</video>
+<p class="player-credit" id="playerCredit"></p>
+</div>
+</div>
+</div>
 
 <div class="modal" id="movieModal" onclick="if(event.target===this)closeModal()">
 <div class="modal-box">
@@ -689,6 +729,50 @@ searchMovies();
 
 function filterGenre(){
 searchMovies();
+}
+
+// --------------------------------------------------
+// 4.8 LEGALLY SHARED FULL MOVIES
+// --------------------------------------------------
+
+const OPEN_MOVIES={
+"big-buck-bunny":{
+title:"Big Buck Bunny",
+description:"A gentle giant rabbit enjoys a peaceful day in the forest until three mischievous rodents disturb the peace.",
+year:"2008",
+runtime:"9 min 56 sec",
+video:"https://commons.wikimedia.org/wiki/Special:Redirect/file/Big_Buck_Bunny_medium.ogv",
+credit:"© copyright 2008, Blender Foundation / www.bigbuckbunny.org. Licensed under Creative Commons Attribution 3.0 (CC BY 3.0). The full film and its credits are presented without edits.",
+licenseUrl:"https://creativecommons.org/licenses/by/3.0/",
+sourceUrl:"https://commons.wikimedia.org/wiki/File:Big_Buck_Bunny_medium.ogv"
+}
+};
+
+function playOpenMovie(movieKey){
+const movie=OPEN_MOVIES[movieKey];
+if(!movie)return;
+const player=document.getElementById("openMoviePlayer");
+document.getElementById("playerTitle").textContent=movie.title;
+document.getElementById("playerDescription").textContent=movie.year+" · "+movie.runtime+" · Full movie";
+document.getElementById("playerCredit").innerHTML=
+ escapeHTML(movie.credit)+"<br><a style=\"color:#c4b5fd\" target=\"_blank\" rel=\"noopener\" href=\""+escapeHTML(movie.licenseUrl)+"\">View licence</a> · <a style=\"color:#c4b5fd\" target=\"_blank\" rel=\"noopener\" href=\""+escapeHTML(movie.sourceUrl)+"\">View original source</a>";
+player.pause();
+player.onerror=()=>{
+document.getElementById("playerDescription").textContent="The video source did not load. Please use the original source link below to check availability.";
+};
+player.src=movie.video;
+player.load();
+document.getElementById("playerModal").style.display="block";
+const startPlayback=player.play();
+if(startPlayback && typeof startPlayback.catch==="function")startPlayback.catch(()=>{});
+}
+
+function closeOpenMoviePlayer(){
+const player=document.getElementById("openMoviePlayer");
+player.pause();
+player.removeAttribute("src");
+player.load();
+document.getElementById("playerModal").style.display="none";
 }
 
 // --------------------------------------------------
