@@ -234,11 +234,16 @@ main{padding:20px 4% 50px}
 
 <div class="section" id="openMoviesSection">
 <div class="section-head">
+
 <h2>▶️ Free to Watch</h2>
 <span class="muted">Full movies with verified open licences</span>
 </div>
+
 <div class="movie-grid" id="openMoviesGrid">
-<div class="open-movie-card" role="button" tabindex="0" onclick="playOpenMovie('big-buck-bunny')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();playOpenMovie('big-buck-bunny')}">
+
+<div class="open-movie-card" role="button" tabindex="0"
+onclick="playOpenMovie('big-buck-bunny')"
+onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();playOpenMovie('big-buck-bunny')}">
 <div class="open-movie-art">🐰</div>
 <div class="open-movie-info">
 <h3>Big Buck Bunny</h3>
@@ -246,8 +251,21 @@ main{padding:20px 4% 50px}
 <button class="primary" type="button" onclick="event.stopPropagation();playOpenMovie('big-buck-bunny')">▶ Watch Full Movie</button>
 </div>
 </div>
+
+<div class="open-movie-card" role="button" tabindex="0"
+onclick="playOpenMovie('sintel')"
+onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();playOpenMovie('sintel')}">
+<div class="open-movie-art">🐉</div>
+<div class="open-movie-info">
+<h3>Sintel</h3>
+<p>2010 · Fantasy · 14 min 48 sec<br>Full movie · Creative Commons BY 3.0</p>
+<button class="primary" type="button" onclick="event.stopPropagation();playOpenMovie('sintel')">▶ Watch Full Movie</button>
 </div>
-<p class="muted">This first collection contains films whose owners permit public viewing and reuse under stated licences. More titles can be added after their rights and video sources are checked.</p>
+</div>
+
+</div>
+
+<p class="muted">Our collection features films shared under open licences. Each title includes its original source and licence information.</p>
 </div>
 
 <div class="section">
