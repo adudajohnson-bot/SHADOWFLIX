@@ -735,6 +735,7 @@ searchMovies();
 // 4.8 LEGALLY SHARED FULL MOVIES
 // --------------------------------------------------
 
+
 const OPEN_MOVIES={
 "big-buck-bunny":{
 title:"Big Buck Bunny",
@@ -745,8 +746,20 @@ video:"https://upload.wikimedia.org/wikipedia/commons/8/88/Big_Buck_Bunny_alt.we
 credit:"© copyright 2008, Blender Foundation / www.bigbuckbunny.org. Licensed under Creative Commons Attribution 3.0 (CC BY 3.0). The full film and its credits are presented without edits.",
 licenseUrl:"https://creativecommons.org/licenses/by/3.0/",
 sourceUrl:"https://commons.wikimedia.org/wiki/File:Big_Buck_Bunny_medium.ogv"
+},
+
+"sintel":{
+title:"Sintel",
+description:"A young woman journeys across a frozen world in search of a dragon she once rescued.",
+year:"2010",
+runtime:"14 min 48 sec",
+video:"https://upload.wikimedia.org/wikipedia/commons/7/79/Sintel_movie_-_Blender_Fondation.ogv",
+credit:"© copyright Blender Foundation | www.sintel.org. Licensed under Creative Commons Attribution 3.0 (CC BY 3.0). Full original film, including its credits.",
+licenseUrl:"https://creativecommons.org/licenses/by/3.0/",
+sourceUrl:"https://commons.wikimedia.org/wiki/File:Sintel_movie_-_Blender_Fondation.ogv"
 }
 };
+
 
 function playOpenMovie(movieKey){
 const movie=OPEN_MOVIES[movieKey];
