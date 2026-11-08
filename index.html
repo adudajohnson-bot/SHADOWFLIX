@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080711">
-<title>SHADOWFLIX 18.0 | Discover Movies</title>
+<title>SHADOWFLIX 19.0 | Discover Movies</title>
 
 <style>
 *{box-sizing:border-box}
@@ -208,7 +208,7 @@ main{padding:20px 4% 50px}
 <div class="section" id="recommendationsSection">
 <div class="section-head">
 <h2>✨ Made For You</h2>
-<span class="muted">Based on your watchlist</span>
+<span class="muted">Based on your ratings and watchlist</span>
 </div>
 <div class="movie-grid" id="recommendationsGrid">
 <div class="empty">Add movies to your watchlist to get recommendations.</div>
@@ -290,7 +290,7 @@ main{padding:20px 4% 50px}
 </main>
 
 <footer>
-SHADOWFLIX 18.0 · Discover. Explore. Connect.<br><br>
+SHADOWFLIX 19.0 · Discover. Explore. Connect.<br><br>
 Movie information provided by TMDB.
 </footer>
 
@@ -1089,34 +1089,57 @@ saved ? "✓ Remove from Watchlist" : "＋ Add to Watchlist";
 async function loadRecommendations(){
 const grid=document.getElementById("recommendationsGrid");
 const saved=profileWatchlist();
+const savedIds=new Set(saved.map(movie=>Number(movie.id)));
+let seedMovies=[];
 
-if(!saved.length){
-grid.innerHTML='<div class="empty">Add movies to your watchlist to get recommendations.</div>';
+// First use the signed-in member's highest-rated movies.
+if(currentUser && supabaseClient){
+try{
+const {data,error}=await supabaseClient.from("movie_reviews")
+.select("movie_id,rating")
+.eq("user_id",currentUser.id)
+.gte("rating",4)
+.order("rating",{ascending:false})
+.limit(5);
+if(error)throw error;
+const rated=(data||[]).filter(item=>item.movie_id && !savedIds.has(Number(item.movie_id)));
+seedMovies=rated.map(item=>({id:Number(item.movie_id),rating:Number(item.rating)}));
+}catch(error){
+console.warn("Could not use member ratings for recommendations:",error.message);
+}
+}
+
+// If there are not enough highly rated movies, use the member's watchlist too.
+const watchlistSeeds=saved.slice(-5).map(movie=>({id:Number(movie.id),rating:0}));
+const combined=[...seedMovies,...watchlistSeeds];
+const uniqueSeeds=[...new Map(combined.map(movie=>[movie.id,movie])).values()].slice(0,5);
+
+if(!uniqueSeeds.length){
+grid.innerHTML=currentUser
+? '<div class="empty">Rate movies 4 or 5 stars, or add movies to your watchlist, and SHADOWFLIX will recommend similar films here.</div>'
+: '<div class="empty">Sign in and rate movies, or add movies to your watchlist, to get personalised recommendations.</div>';
 return;
 }
 
-grid.innerHTML='<div class="empty">Finding movies you might enjoy...</div>';
+grid.innerHTML='<div class="empty">Finding movies based on your favourites...</div>';
 
 try{
-const recent=saved.slice(-3);
-
-const results=await Promise.all(
-recent.map(movie=>api("/movie/"+movie.id+"/similar"))
-);
-
-const savedIds=new Set(saved.map(movie=>movie.id));
-
-const recommendations=results
-.flatMap(result=>result.results || [])
-.filter(movie=>!savedIds.has(movie.id));
-
-const unique=[...new Map(
-recommendations.map(movie=>[movie.id,movie])
-).values()];
-
+const results=await Promise.all(uniqueSeeds.map(movie=>api("/movie/"+movie.id+"/similar")));
+const recommendations=results.flatMap((result,index)=>(result.results||[]).map(movie=>({
+...movie,
+recommendationScore:(uniqueSeeds[index].rating||0)
+})));
+const unique=[...new Map(recommendations
+.filter(movie=>!savedIds.has(Number(movie.id)))
+.map(movie=>[movie.id,movie])).values()];
+unique.sort((a,b)=>(b.recommendationScore||0)-(a.recommendationScore||0));
+if(!unique.length){
+grid.innerHTML='<div class="empty">No recommendations found yet. Add another movie to your watchlist or rate another movie.</div>';
+return;
+}
 displayMovies("recommendationsGrid",unique.slice(0,12));
-
 }catch(error){
+console.error("Recommendation engine error:",error);
 grid.innerHTML='<div class="empty">Could not load recommendations. Please try again.</div>';
 }
 }
